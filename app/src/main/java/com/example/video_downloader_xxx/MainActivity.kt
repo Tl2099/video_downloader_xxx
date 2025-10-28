@@ -43,7 +43,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun setupViewPager() {
         pagerAdapter = MainPagerAdapter(this)
         binding.viewPager2.adapter = pagerAdapter
-        //binding.viewPager2.isUserInputEnabled = false
+        binding.viewPager2.isUserInputEnabled = false
     }
 
     fun switchToBrowserTab(query: String){

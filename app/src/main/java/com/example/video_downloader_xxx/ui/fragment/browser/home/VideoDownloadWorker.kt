@@ -1,5 +1,15 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.home
-
+//package com.example.video_downloader_xxx.ui.fragment.browser.home
+//
+//import android.content.Context
+//import androidx.work.CoroutineWorker
+//import androidx.work.WorkerParameters
+//import com.example.video_downloader_xxx.util.DownloadStatus
+//import kotlinx.coroutines.Dispatchers
+//import kotlinx.coroutines.flow.Flow
+//import kotlinx.coroutines.flow.flow
+//import kotlinx.coroutines.withContext
+//import java.io.File
+//
 //class VideoDownloadWorker(
 //    context: Context,
 //    params: WorkerParameters
@@ -19,6 +29,6 @@ package com.example.video_downloader_xxx.ui.fragment.browser.home
 //    }
 //
 //    private suspend fun downloadFile(url: String, outputFile: File): Flow<DownloadStatus> = flow {
-//        emit(DownloadStatus.DOWNLOADING(0))
+//        emit(DownloadStatus.PENDING)
 //    }
 //}

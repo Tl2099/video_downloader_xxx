@@ -1,8 +1,11 @@
 package com.example.video_downloader_xxx.ui.fragment.browser
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.util.DownloadState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +18,13 @@ class DownloadViewModel(
 
     private val _downloadVideoState = MutableStateFlow<DownloadState>(DownloadState.Idle)
     val downloadVideoState = _downloadVideoState.asStateFlow()
+
+    private val _downloadVideoEvent = MutableLiveData<VideoInfo>()
+    val downloadVideoEvent: LiveData<VideoInfo> = _downloadVideoEvent
+
+    fun startDownload(videoInfo: VideoInfo) {
+        _downloadVideoEvent.value = videoInfo
+    }
 
     fun start(url: String, outFile: File) {
         viewModelScope.launch {

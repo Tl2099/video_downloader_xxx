@@ -64,6 +64,9 @@ android {
 }
 
 dependencies {
+    //Android Material Components
+    implementation("com.google.android.material:material:1.12.0")
+
     // Core yt-dlp wrapper
     implementation("io.github.junkfood02.youtubedl-android:library:0.18.0")
 

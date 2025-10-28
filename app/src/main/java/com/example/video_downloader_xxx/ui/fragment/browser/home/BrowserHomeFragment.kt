@@ -67,7 +67,6 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 Log.i("BrowserHomeFragment_ttdat", "Web mode: ")
                 val text = binding?.edtUrl?.text.toString()
                 if (text.isNotEmpty()) {
-                    //sharedVM.setSearchQuery(text)
                     (activity as MainActivity).switchToBrowserTab(text)
                 }
             }
@@ -100,19 +99,6 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 }
             }
         }
-
-//        binding?.btnSearch?.setOnClickListener {
-//            val inputUrl = binding?.edtUrl?.text.toString().trim()
-//
-//            if(inputUrl.isNotBlank()){
-//                val validUrl = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
-//
-//                val action = BrowserFragmentDirections.actionBrowserFragmentToWebFragment(validUrl)
-//                findNavController().navigate(action)
-//            }else{
-//                Toast.makeText(requireContext(), "Please enter a valid URL", Toast.LENGTH_SHORT).show()
-//            }
-//        }
     }
 
     override fun initData() {

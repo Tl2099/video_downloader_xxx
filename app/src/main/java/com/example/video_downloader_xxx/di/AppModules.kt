@@ -2,6 +2,7 @@ package com.example.video_downloader_xxx.di
 
 import com.example.video_downloader_xxx.data.repository.VideoRepository
 import com.example.video_downloader_xxx.domain.usecase.DownloadVideoUseCase
+import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.fragment.browser.DownloadViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.VideoDownloadManager
@@ -15,6 +16,7 @@ val appModules = module{
     single { OkHttpClient() }
     single { VideoDownloadManager() }
     single { VideoRepository(get()) }
+    single { VideoDownloadService() }
     factory { DownloadVideoUseCase(get()) }
     viewModel { DownloadViewModel(get()) }
     viewModel { BrowserWebViewModel() }
