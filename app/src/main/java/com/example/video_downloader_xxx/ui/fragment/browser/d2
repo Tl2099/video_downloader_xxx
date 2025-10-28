@@ -1,0 +1,424 @@
+# 📄 CÁC FILE QUAN TRỌNG CẦN THIẾT
+
+## 1. UTILITY CLASSES
+
+### SingleLiveEvent.kt
+```kotlin
+package com.yourname.videodownloader.util
+
+import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.Observer
+
+class SingleLiveEvent<T> : MutableLiveData<T>() {
+    override fun observe(owner: LifecycleOwner, observer: Observer<T>) {
+        super.observe(owner, Observer { t ->
+            if (t != null) {
+                observer.onChanged(t)
+                postValue(null)
+            }
+        })
+    }
+}
+```
+
+### BaseSchedulers.kt
+```kotlin
+package com.yourname.videodownloader.util.scheduler
+
+import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+
+interface BaseSchedulers {
+    fun io(): Scheduler
+    fun mainThread(): Scheduler
+}
+
+class SchedulersProvider : BaseSchedulers {
+    override fun io(): Scheduler = Schedulers.io()
+    override fun mainThread(): Scheduler = AndroidSchedulers.mainThread()
+}
+```
+
+### FileUtil.kt
+```kotlin
+package com.yourname.videodownloader.util
+
+import android.content.Context
+import android.os.Environment
+import java.io.File
+
+class FileUtil(context: Context) {
+    companion object {
+        const val FOLDER_NAME = "VideoDownloader"
+    }
+
+    val folderDir = File(
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+        FOLDER_NAME
+    )
+}
+```
+
+---
+
+## 2. DI MODULE - DAGGER
+
+### AppComponent.kt
+```kotlin
+package com.yourname.videodownloader.di.component
+
+import com.yourname.videodownloader.DLApplication
+import com.yourname.videodownloader.di.module.AppModule
+import com.yourname.videodownloader.di.module.NetworkModule
+import com.yourname.videodownloader.di.module.RepositoryModule
+import com.yourname.videodownloader.di.module.ViewModelModule
+import dagger.Component
+import dagger.android.AndroidInjector
+import dagger.android.support.AndroidSupportInjectionModule
+import javax.inject.Singleton
+
+@Singleton
+@Component(
+    modules = [
+        AndroidSupportInjectionModule::class,
+        AppModule::class,
+        NetworkModule::class,
+        RepositoryModule::class,
+        ViewModelModule::class
+    ]
+)
+interface AppComponent : AndroidInjector<DLApplication> {
+    @Component.Factory
+    interface Factory {
+        fun create(): AppComponent
+    }
+}
+```
+
+### AppModule.kt
+```kotlin
+package com.yourname.videodownloader.di.module
+
+import android.app.DownloadManager
+import android.content.Context
+import com.yourname.videodownloader.DLApplication
+import com.yourname.videodownloader.util.FileUtil
+import com.yourname.videodownloader.util.scheduler.BaseSchedulers
+import com.yourname.videodownloader.util.scheduler.SchedulersProvider
+import dagger.Module
+import dagger.Provides
+import javax.inject.Singleton
+
+@Module
+class AppModule {
+
+    @Provides
+    @Singleton
+    fun provideContext(application: DLApplication): Context = application
+
+    @Provides
+    @Singleton
+    fun provideDownloadManager(context: Context): DownloadManager {
+        return context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    }
+
+    @Provides
+    @Singleton
+    fun provideFileUtil(context: Context): FileUtil {
+        return FileUtil(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBaseSchedulers(): BaseSchedulers = SchedulersProvider()
+}
+```
+
+### NetworkModule.kt
+```kotlin
+package com.yourname.videodownloader.di.module
+
+import android.app.Application
+import com.yourname.videodownloader.data.remote.service.VideoService
+import com.yourname.videodownloader.data.remote.VideoRemoteDataSource
+import com.squareup.okhttp3.OkHttpClient
+import com.squareup.okhttp3.logging.HttpLoggingInterceptor
+import dagger.Module
+import dagger.Provides
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
+
+@Module
+class NetworkModule {
+
+    companion object {
+        private const val BASE_URL = "http://youtube-dl-android.herokuapp.com/api/"
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        val logging = HttpLoggingInterceptor()
+        logging.level = HttpLoggingInterceptor.Level.BODY
+
+        return OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .connectTimeout(10L, TimeUnit.SECONDS)
+            .writeTimeout(10L, TimeUnit.SECONDS)
+            .readTimeout(30L, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideVideoService(okHttpClient: OkHttpClient): VideoService {
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .build()
+            .create(VideoService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideVideoRemoteDataSource(videoService: VideoService): VideoRemoteDataSource {
+        return VideoRemoteDataSource(videoService)
+    }
+}
+```
+
+### RepositoryModule.kt
+```kotlin
+package com.yourname.videodownloader.di.module
+
+import com.yourname.videodownloader.data.remote.VideoRemoteDataSource
+import com.yourname.videodownloader.data.repository.VideoRepository
+import com.yourname.videodownloader.data.repository.VideoRepositoryImpl
+import dagger.Module
+import dagger.Provides
+import javax.inject.Singleton
+
+@Module
+class RepositoryModule {
+
+    @Provides
+    @Singleton
+    fun provideVideoRepository(
+        remoteDataSource: VideoRemoteDataSource
+    ): VideoRepository {
+        return VideoRepositoryImpl(remoteDataSource)
+    }
+}
+```
+
+### ViewModelModule.kt
+```kotlin
+package com.yourname.videodownloader.di.module
+
+import com.yourname.videodownloader.ui.main.home.BrowserViewModel
+import com.yourname.videodownloader.ui.main.progress.ProgressViewModel
+import com.yourname.videodownloader.data.repository.VideoRepository
+import com.yourname.videodownloader.util.scheduler.BaseSchedulers
+import com.yourname.videodownloader.util.FileUtil
+import android.app.DownloadManager
+import dagger.Module
+import dagger.Provides
+
+@Module
+abstract class ViewModelModule {
+
+    companion object {
+        @Provides
+        fun provideBrowserViewModel(
+            videoRepository: VideoRepository
+        ): BrowserViewModel {
+            return BrowserViewModel(videoRepository)
+        }
+
+        @Provides
+        fun provideProgressViewModel(
+            downloadManager: DownloadManager,
+            fileUtil: FileUtil
+        ): ProgressViewModel {
+            return ProgressViewModel(downloadManager, fileUtil.folderDir)
+        }
+    }
+}
+```
+
+---
+
+## 3. UPDATE DLApplication
+
+```kotlin
+package com.yourname.videodownloader
+
+import android.app.Application
+import com.yourname.videodownloader.di.component.AppComponent
+import com.yourname.videodownloader.di.component.DaggerAppComponent
+
+class DLApplication : Application() {
+
+    lateinit var appComponent: AppComponent
+
+    override fun onCreate() {
+        super.onCreate()
+
+        appComponent = DaggerAppComponent.factory().create()
+    }
+}
+```
+
+---
+
+## 4. BASE CLASSES
+
+### BaseViewModel.kt
+```kotlin
+package com.yourname.videodownloader.ui.main.base
+
+abstract class BaseViewModel {
+    abstract fun start()
+    abstract fun stop()
+}
+```
+
+### BaseFragment.kt
+```kotlin
+package com.yourname.videodownloader.ui.main.base
+
+import android.arch.lifecycle.ViewModelProvider
+import android.support.v4.app.Fragment
+
+abstract class BaseFragment : Fragment() {
+
+    inline fun <reified T : BaseViewModel> getViewModel(
+        viewModelFactory: ViewModelProvider.Factory
+    ): T {
+        return ViewModelProvider.of(this, viewModelFactory).get(T::class.java)
+    }
+}
+```
+
+### BaseActivity.kt
+```kotlin
+package com.yourname.videodownloader.ui.main.base
+
+import android.support.v7.app.AppCompatActivity
+
+abstract class BaseActivity : AppCompatActivity()
+```
+
+---
+
+## 5. MAIN ACTIVITY
+
+```kotlin
+package com.yourname.videodownloader.ui.main.home
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import android.support.v4.view.ViewPager
+import android.os.Bundle
+import com.yourname.videodownloader.ui.main.base.BaseActivity
+
+class MainActivity : BaseActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val viewPager = findViewById<ViewPager>(R.id.viewPager)
+
+        grantPermissions()
+    }
+
+    private fun grantPermissions() {
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                0
+            )
+        }
+    }
+}
+```
+
+---
+
+## 6. CONFIG FILE - AndroidManifest.xml
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.yourname.videodownloader">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".DLApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity android:name=".ui.main.home.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+```
+
+---
+
+## 7. ANNOTATION - OpenForTesting.kt
+
+```kotlin
+package com.yourname.videodownloader
+
+@Target(AnnotationTarget.CLASS)
+annotation class OpenForTesting
+```
+
+---
+
+## 📝 LƯU Ý QUAN TRỌNG
+
+1. **Dagger Configuration**: Phải setup đúng Dagger để app chạy
+2. **Permissions**: Phải request storage permission ở runtime (Android 6+)
+3. **Backend URL**: Thay đổi URL trong NetworkModule nếu dùng server riêng
+4. **Testing**: Test với nhiều website để đảm bảo compatibility
+5. **Error Handling**: Xử lý các trường hợp lỗi mạng, invalid URL
+
+---
+
+## 🧪 TEST FLOW
+
+1. Mở app → Màn hình Browser
+2. Nhập URL video (YouTube, Facebook, etc.)
+3. Click nút Download (FAB)
+4. Chọn "Download" trong dialog
+5. Xem tiến độ download trong Progress tab
+6. File được lưu trong `/Download/VideoDownloader/`
+
