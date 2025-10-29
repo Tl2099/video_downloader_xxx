@@ -64,8 +64,15 @@ android {
 }
 
 dependencies {
+
+    //glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    //Flexbox
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
+
     //Android Material Components
-    implementation("com.google.android.material:material:1.12.0")
+    implementation("com.google.android.material:material:1.13.0")
 
     // Core yt-dlp wrapper
     implementation("io.github.junkfood02.youtubedl-android:library:0.18.0")

@@ -13,7 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.MainActivity
 import com.example.video_downloader_xxx.databinding.FragmentBrowserBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.DownloadViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.util.DownloadState
 import kotlinx.coroutines.launch
@@ -41,36 +41,17 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initView() {
-
         binding?.apply {
             progressBar.isIndeterminate = false
             progressBar.max = 100
         }
 
-        binding?.btnSearch?.setOnClickListener {
-            val isChecked = binding?.switchMode?.isChecked ?: false
-            if (isChecked) {
-                Log.i("BrowserHomeFragment_ttdat", "Url mode: ")
-                val url = binding?.edtUrl?.text.toString().trim()
-                if (url.isBlank()) {
-                    Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
-                        .show()
-                    return@setOnClickListener
-                }
+    }
 
-                if (hasPermissions()) {
-                    startDownload()
-                } else {
-                    requestPermissions()
-                }
-            } else {
-                Log.i("BrowserHomeFragment_ttdat", "Web mode: ")
-                val text = binding?.edtUrl?.text.toString()
-                if (text.isNotEmpty()) {
-                    (activity as MainActivity).switchToBrowserTab(text)
-                }
-            }
-        }
+    override fun initData() {
+    }
+
+    override fun initListener() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             downloadViewModel.downloadVideoState.collect { st ->
@@ -99,12 +80,31 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 }
             }
         }
-    }
 
-    override fun initData() {
-    }
+        binding?.btnSearch?.setOnClickListener {
+            val isChecked = binding?.switchMode?.isChecked ?: false
+            if (isChecked) {
+                Log.i("BrowserHomeFragment_ttdat", "Url mode: ")
+                val url = binding?.edtUrl?.text.toString().trim()
+                if (url.isBlank()) {
+                    Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
+                        .show()
+                    return@setOnClickListener
+                }
 
-    override fun initListener() {
+                if (hasPermissions()) {
+                    startDownload()
+                } else {
+                    requestPermissions()
+                }
+            } else {
+                Log.i("BrowserHomeFragment_ttdat", "Web mode: ")
+                val text = binding?.edtUrl?.text.toString()
+                if (text.isNotEmpty()) {
+                    (activity as MainActivity).switchToBrowserTab(text)
+                }
+            }
+        }
     }
 
     override fun reloadAds() {
@@ -159,6 +159,13 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             .show()
 
         downloadViewModel.start(url, outFile)
+//        downloadViewModel.fetchVideoInfo(url)
+//        downloadViewModel.videoInfo.value?.let { video ->
+//            val sheet = DownloadUrlVideoBottomSheet(video) {
+//                downloadViewModel.downloadVideo(video, outFile)
+//            }
+//            sheet.show(parentFragmentManager, "DownloadSheet")
+//        }
     }
 
 }

@@ -3,9 +3,9 @@ package com.example.video_downloader_xxx.di
 import com.example.video_downloader_xxx.data.repository.VideoRepository
 import com.example.video_downloader_xxx.domain.usecase.DownloadVideoUseCase
 import com.example.video_downloader_xxx.service.VideoDownloadService
-import com.example.video_downloader_xxx.ui.fragment.browser.DownloadViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
-import com.example.video_downloader_xxx.ui.fragment.browser.VideoDownloadManager
+import com.example.video_downloader_xxx.data.repository.VideoDownloadManager
 import com.example.video_downloader_xxx.ui.fragment.browser.web.BrowserWebViewModel
 import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.viewModel

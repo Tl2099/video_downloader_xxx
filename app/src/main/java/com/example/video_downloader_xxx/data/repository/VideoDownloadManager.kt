@@ -1,4 +1,4 @@
-package com.example.video_downloader_xxx.ui.fragment.browser
+package com.example.video_downloader_xxx.data.repository
 
 import android.util.Log
 import com.example.video_downloader_xxx.data.model.VideoInfo

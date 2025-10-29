@@ -7,23 +7,17 @@ import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.example.video_downloader_xxx.MainActivity
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.base.BaseFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.DownloadViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
-import com.example.video_downloader_xxx.ui.fragment.browser.VideoDownloadManager
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
 
@@ -57,7 +51,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         }
 
         setupWebView()
-        observeDownloadEvents()
+        //observeDownloadEvents()
     }
 
     private fun setupWebView() {
@@ -125,14 +119,14 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
     }
 
-    private fun observeDownloadEvents() {
-        downloadViewModel.downloadVideoEvent.observe(viewLifecycleOwner) { videoInfo ->
-            Log.i("WebFragment_ttdat", "Received download event: ${videoInfo.title}")
-            if (serviceBound) {
-                downloadService.startDownload(videoInfo)
-            }
-        }
-    }
+//    private fun observeDownloadEvents() {
+//        downloadViewModel.downloadVideoEvent.observe(viewLifecycleOwner) { videoInfo ->
+//            Log.i("WebFragment_ttdat", "Received download event: ${videoInfo.title}")
+//            if (serviceBound) {
+//                downloadService.startDownload(videoInfo)
+//            }
+//        }
+//    }
 
     override fun initData() {
     }
