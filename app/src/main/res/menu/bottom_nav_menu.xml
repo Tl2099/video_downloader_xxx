@@ -6,11 +6,6 @@
         android:title="@string/txt_browser" />
 
     <item
-        android:id="@+id/webFragment"
-        android:icon="@drawable/ic_web"
-        android:title="@string/txt_web" />
-
-    <item
         android:id="@+id/progressFragment"
         android:icon="@drawable/ic_progress"
         android:title="@string/txt_progress" />

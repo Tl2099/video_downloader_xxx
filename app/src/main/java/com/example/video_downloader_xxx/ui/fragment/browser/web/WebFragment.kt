@@ -9,6 +9,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.video_downloader_xxx.MainActivity
 import com.example.video_downloader_xxx.data.model.VideoInfo
@@ -31,26 +32,37 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val detectedVideos = mutableListOf<VideoInfo>()
     private var currentVideo: VideoInfo? = null
 
-    private val args by navArgs<WebFragmentArgs>()
-
-    private val urlLink by lazy {
-        args.url
-    }
-
     override fun initView() {
-
-        sharedVM.searchQuery.observe(viewLifecycleOwner) {
-            Log.i("webFragment_ttdat", "initView: $it")
-            val url = if (it.startsWith("http")) it
-            else "https://www.google.com/search?q=${it.replace(" ", "+")}"
-            webView.loadUrl(url)
-        }
-
-        binding?.ivGoBack?.setOnClickListener {
-            (requireActivity() as MainActivity).binding.viewPager2.currentItem = 0
-        }
-
         setupWebView()
+
+        val text = arguments?.getString("url") ?: return
+        val url = if (text.startsWith("http")) text
+        else "https://www.google.com/search?q=${text.replace(" ", "+")}"
+        webView.loadUrl(url)
+
+        binding?.apply {
+            ivCloseTab.setOnClickListener {
+                findNavController().popBackStack()
+            }
+
+            ivGoBack.setOnClickListener {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    findNavController().popBackStack()
+                }
+            }
+
+            ivRefresh.setOnClickListener {
+                webView.reload()
+            }
+
+            ivGoForward.setOnClickListener {
+                if(webView.canGoForward()){
+                    webView.goForward()
+                }
+            }
+        }
         //observeDownloadEvents()
     }
 
@@ -74,6 +86,8 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                 }
             }
         }
+
+//        binding.ivCloseTab.setOnClickListener { f }
     }
 
     private fun onVideoDetected(videoInfo: VideoInfo) {

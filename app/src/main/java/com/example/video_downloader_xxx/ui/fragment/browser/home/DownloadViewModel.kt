@@ -25,10 +25,11 @@ class DownloadViewModel(
     private val _downloadVideoState = MutableStateFlow<DownloadState>(DownloadState.Idle)
     val downloadVideoState = _downloadVideoState.asStateFlow()
 
-    fun fetchVideoInfo(url: String) {
+    fun fetchVideoInfo(url: String){
         viewModelScope.launch {
             try {
                 _videoInfo.value = manager.getVideoInfo(url)
+
                 if (_videoInfo.value == null) {
                     _downloadVideoState.value = DownloadState.Error("Không thể phân tích video.")
                     return@launch
@@ -49,6 +50,7 @@ class DownloadViewModel(
         viewModelScope.launch {
             _downloadVideoState.value = DownloadState.Idle
             manager.downloadVideo(videoInfo, outFile).collect { progress ->
+                Log.i("DownloadViewModel", "downloadVideo: ${videoInfo.sourceUrl} $progress")
                 if (progress.percent in 0f..99f) {
                     _downloadVideoState.value = DownloadState.Downloading(progress.percent.toInt())
                 } else if (progress.percent >= 100f) {

@@ -87,10 +87,8 @@ class VideoDownloadManager {
         }
 
         try {
-            withContext(Dispatchers.IO) {
-                YoutubeDL.getInstance().execute(request, "download") { progress, eta, line ->
-                    trySend(DownloadProgress(progress, eta, line))
-                }
+            YoutubeDL.getInstance().execute(request, "download") { progress, eta, line ->
+                trySend(DownloadProgress(progress, eta, line))
             }
 
             trySend(DownloadProgress(100f, 0, "Completed"))

@@ -14,7 +14,7 @@ import java.io.IOException
 
 class VideoRepository(private val client: OkHttpClient = OkHttpClient()) {
 
-    suspend fun downloadVideo(url: String, outputFile: File): Flow<DownloadState> = flow {
+    fun downloadVideo(url: String, outputFile: File): Flow<DownloadState> = flow {
         emit(DownloadState.Downloading(0))
 
         val request = Request.Builder().url(url).build()

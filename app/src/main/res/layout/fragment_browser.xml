@@ -1,64 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical">
 
-    <!-- Search Form (visible by default) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/searchFormContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
-
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/appBarLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/materialToolBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/browserMenuContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginEnd="8dp"
-                    android:elevation="0dp"
-                    app:cardCornerRadius="8dp"></com.google.android.material.card.MaterialCardView>
-            </com.google.android.material.appbar.MaterialToolbar>
-        </com.google.android.material.appbar.AppBarLayout>
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="12dp"
-            android:layout_marginTop="20dp"
-            app:layout_constraintBottom_toTopOf="@id/txtStatus"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
-
-        <TextView
-            android:id="@+id/txtStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center"
-            android:text="Idle"
-            app:layout_constraintBottom_toTopOf="@id/edtUrl"
-            app:layout_constraintEnd_toEndOf="@id/progressBar"
-            app:layout_constraintStart_toStartOf="@id/progressBar"
-            app:layout_constraintTop_toBottomOf="@id/progressBar" />
 
         <com.google.android.material.textfield.MaterialAutoCompleteTextView
             android:id="@+id/edtUrl"
@@ -68,23 +20,11 @@
             android:singleLine="true"
             android:textColor="@color/white"
             android:textSize="14sp"
+            app:layout_constraintVertical_bias="0.3"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
-
-        <Switch
-            android:id="@+id/switchMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textOff="Web"
-            android:textOn="Url"
-            app:layout_constraintBottom_toTopOf="@id/btnSearch"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.9"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/edtUrl"
-            tools:ignore="UseSwitchCompatOrMaterialXml" />
+            app:layout_constraintStart_toStartOf="parent"/>
 
         <Button
             android:id="@+id/btnSearch"
@@ -95,26 +35,29 @@
             android:text="Search"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/switchMode" />
+            app:layout_constraintTop_toBottomOf="@id/edtUrl" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="12dp"
+            android:layout_marginTop="50dp"
+            app:layout_constraintBottom_toTopOf="@id/txtStatus"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnSearch" />
+
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="Idle"
+            app:layout_constraintEnd_toEndOf="@id/progressBar"
+            app:layout_constraintStart_toStartOf="@id/progressBar"
+            app:layout_constraintTop_toBottomOf="@id/progressBar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <GridView
-        android:id="@+id/GridView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_gravity="center"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:horizontalSpacing="4dp"
-        android:numColumns="4"
-        android:padding="4dp"
-        android:verticalSpacing="4dp"
-        android:visibility="gone" />
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="16dp"
-        android:layout_gravity="bottom|center"
-        android:gravity="center" />
 </androidx.appcompat.widget.LinearLayoutCompat>

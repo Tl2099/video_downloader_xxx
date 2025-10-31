@@ -11,26 +11,34 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.MainActivity
+import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.FragmentBrowserBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.util.DownloadState
+import com.example.video_downloader_xxx.util.FileHelper
+import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
+import com.example.video_downloader_xxx.util.hideKeyboard
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
+import kotlin.math.log
 
 class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     private val downloadViewModel: DownloadViewModel by viewModel()
     private val sharedVM: SharedViewModel by viewModel()
+    private var pendingUrl: String? = null
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val granted = permissions.entries.all { it.value }
         if (granted) {
-            startDownload()
+            pendingUrl?.let { url ->
+                startDownload(url)
+            }
         } else {
             Toast.makeText(
                 requireContext(),
@@ -52,11 +60,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initListener() {
-
         viewLifecycleOwner.lifecycleScope.launch {
             downloadViewModel.downloadVideoState.collect { st ->
                 when (st) {
                     is DownloadState.Idle -> {
+                        Log.i("BrowserHomeFragment_ttdat", "DownloadState Idle ")
                         binding?.apply {
                             txtStatus.text = "Idle"
                             progressBar.progress = 0
@@ -64,6 +72,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     }
 
                     is DownloadState.Downloading -> {
+                        Log.i("BrowserHomeFragment_ttdat", "DownloadState Downloading ")
                         binding?.apply {
                             txtStatus.text = "Downloading: ${st.progress}%"
                             progressBar.progress = st.progress
@@ -71,10 +80,12 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     }
 
                     is DownloadState.Success -> {
+                        Log.i("BrowserHomeFragment_ttdat", "DownloadState Success ")
                         binding?.txtStatus?.text = "Saved: ${st.file.absolutePath}"
                     }
 
                     is DownloadState.Error -> {
+                        Log.i("BrowserHomeFragment_ttdat", "DownloadState Error ")
                         binding?.txtStatus?.text = "Error: ${st.message}"
                     }
                 }
@@ -82,32 +93,66 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         }
 
         binding?.btnSearch?.setOnClickListener {
-            val isChecked = binding?.switchMode?.isChecked ?: false
-            if (isChecked) {
-                Log.i("BrowserHomeFragment_ttdat", "Url mode: ")
-                val url = binding?.edtUrl?.text.toString().trim()
-                if (url.isBlank()) {
-                    Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
-                        .show()
-                    return@setOnClickListener
-                }
+            hideKeyboard()
+            val text = binding?.edtUrl?.text.toString().trim()
 
-                if (hasPermissions()) {
-                    startDownload()
-                } else {
-                    requestPermissions()
-                }
+            if (text.isBlank()) {
+                Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            if (text.isValidUrl()) {
+                downloadViaUrl(text)
             } else {
-                Log.i("BrowserHomeFragment_ttdat", "Web mode: ")
-                val text = binding?.edtUrl?.text.toString()
-                if (text.isNotEmpty()) {
-                    (activity as MainActivity).switchToBrowserTab(text)
-                }
+                downloadViaSearch(text)
             }
         }
     }
 
+    private fun downloadViaUrl(url: String) {
+        Log.i("BrowserHomeFragment_ttdat", "Url mode: ")
+        if (hasPermissions()) {
+            startDownload(url)
+        } else {
+            pendingUrl = url
+            requestPermissions()
+        }
+    }
+
+    private fun downloadViaSearch(url: String) {
+        Log.i("BrowserHomeFragment_ttdat", "Web mode: ")
+        if (url.isNotEmpty()) {
+            val action = BrowserHomeFragmentDirections.actionBrowserFragmentToWebFragment(url)
+            findNavController().navigate(action)
+        }
+    }
+
     override fun reloadAds() {
+    }
+
+    private fun startDownload(url: String) {
+        val outFile = FileHelper.createVideoFile(requireContext())
+
+        Toast.makeText(requireContext(), "Saving to: ${outFile.absolutePath}", Toast.LENGTH_LONG)
+            .show()
+
+        //downloadViewModel.start(url, outFile)
+
+        lifecycleScope.launch {
+            downloadViewModel.fetchVideoInfo(url)
+            downloadViewModel.videoInfo.collect { video ->
+                if (video != null) {
+                    val sheet = DownloadUrlVideoBottomSheet.newInstance(video) {
+                        Log.i("BrowserHomeFragment_ttdat", "startDownload: $it")
+                        downloadViewModel.downloadVideo(it, outFile)
+                    }
+                    Log.i("BrowserHomeFragment_ttdat", "Showing BottomSheet for: ${video.videoUrl}")
+                    sheet.show(parentFragmentManager, "DownloadSheet")
+                    return@collect
+                }
+            }
+        }
     }
 
     override fun getViewBinding(): FragmentBrowserBinding =
@@ -137,35 +182,6 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             )
         }
         requestPermissionLauncher.launch(permissions)
-    }
-
-    private fun startDownload() {
-        val url = binding?.edtUrl?.text.toString().trim()
-
-        val downloadsDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        } else {
-            @Suppress("DEPRECATION")
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        }
-
-        if (!downloadsDir.exists()) {
-            downloadsDir.mkdirs()
-        }
-
-        val outFile = File(downloadsDir, "video_${System.currentTimeMillis()}.mp4")
-
-        Toast.makeText(requireContext(), "Saving to: ${outFile.absolutePath}", Toast.LENGTH_LONG)
-            .show()
-
-        downloadViewModel.start(url, outFile)
-//        downloadViewModel.fetchVideoInfo(url)
-//        downloadViewModel.videoInfo.value?.let { video ->
-//            val sheet = DownloadUrlVideoBottomSheet(video) {
-//                downloadViewModel.downloadVideo(video, outFile)
-//            }
-//            sheet.show(parentFragmentManager, "DownloadSheet")
-//        }
     }
 
 }
