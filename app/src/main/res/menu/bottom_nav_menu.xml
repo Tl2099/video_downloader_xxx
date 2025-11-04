@@ -6,12 +6,7 @@
         android:title="@string/txt_browser" />
 
     <item
-        android:id="@+id/progressFragment"
-        android:icon="@drawable/ic_progress"
-        android:title="@string/txt_progress" />
-
-    <item
-        android:id="@+id/listVideoFragment"
-        android:icon="@drawable/ic_video"
-        android:title="@string/txt_video" />
+        android:id="@+id/libraryFragment"
+        android:icon="@drawable/ic_library"
+        android:title="@string/txt_library" />
 </menu>

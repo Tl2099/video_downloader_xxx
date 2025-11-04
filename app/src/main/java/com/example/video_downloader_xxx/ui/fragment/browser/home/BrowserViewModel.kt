@@ -1,22 +1,22 @@
 package com.example.video_downloader_xxx.ui.fragment.browser.home
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.video_downloader_xxx.data.model.Social
 import com.example.video_downloader_xxx.data.model.VideoInfo
+import com.example.video_downloader_xxx.data.repository.SocialRepository
 import com.example.video_downloader_xxx.data.repository.VideoDownloadManager
 import com.example.video_downloader_xxx.util.DownloadState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 
-class DownloadViewModel(
-    private val manager: VideoDownloadManager
+class BrowserViewModel(
+    private val manager: VideoDownloadManager,
+    private val repository: SocialRepository
 ) : ViewModel() {
 
     private val _videoInfo = MutableStateFlow<VideoInfo?>(null)
@@ -24,6 +24,17 @@ class DownloadViewModel(
 
     private val _downloadVideoState = MutableStateFlow<DownloadState>(DownloadState.Idle)
     val downloadVideoState = _downloadVideoState.asStateFlow()
+
+    private val _social = MutableStateFlow<List<Social>>(emptyList())
+    val social: StateFlow<List<Social>> = _social.asStateFlow()
+
+    init {
+        loadSocials()
+    }
+
+    private fun loadSocials() {
+        _social.value = repository.getDefaultSocials()
+    }
 
     fun fetchVideoInfo(url: String){
         viewModelScope.launch {

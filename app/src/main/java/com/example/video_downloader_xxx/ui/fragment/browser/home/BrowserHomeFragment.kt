@@ -1,35 +1,40 @@
 package com.example.video_downloader_xxx.ui.fragment.browser.home
 
 import android.Manifest
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.video_downloader_xxx.MainActivity
-import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.FragmentBrowserBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import java.io.File
-import kotlin.math.log
 
 class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
-    private val downloadViewModel: DownloadViewModel by viewModel()
+    private val downloadViewModel: BrowserViewModel by viewModel()
     private val sharedVM: SharedViewModel by viewModel()
     private var pendingUrl: String? = null
+
+    private val socialAdapter by lazy {
+        SocialAdapter(emptyList()) { social ->
+            downloadViaSearch(social.websiteUrl)
+        }
+    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -60,6 +65,56 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initListener() {
+        binding?.recycleViewListSocialMedia?.adapter = socialAdapter
+        binding?.recycleViewListRecentlyWeb?.adapter = socialAdapter
+        observeSocialData()
+        observeDownloadState()
+
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        binding?.icPaste?.setOnClickListener {
+            val clipData = clipboard.primaryClip
+            if (clipData != null && clipData.itemCount > 0) {
+                val text = clipData.getItemAt(0).text?.toString()
+                if (!text.isNullOrEmpty()) {
+                    binding?.edtUrl?.setText(text)
+                    binding?.edtUrl?.setSelection(text.length)
+                }
+            } else {
+                Toast.makeText(requireContext(), "Không có dữ liệu trong clipboard", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
+        binding?.btnSearch?.setOnClickListener {
+            hideKeyboard()
+            val text = binding?.edtUrl?.text.toString().trim()
+
+            if (text.isBlank()) {
+                Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            if (text.isValidUrl()) {
+                downloadViaUrl(text)
+            } else {
+                downloadViaSearch(text)
+            }
+
+            binding?.edtUrl?.text?.clear()
+        }
+    }
+
+    private fun observeSocialData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            downloadViewModel.social.collectLatest { socialList ->
+                socialAdapter.updateData(socialList.take(7))
+            }
+        }
+    }
+
+    private fun observeDownloadState() {
         viewLifecycleOwner.lifecycleScope.launch {
             downloadViewModel.downloadVideoState.collect { st ->
                 when (st) {
@@ -90,23 +145,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     }
                 }
             }
-        }
 
-        binding?.btnSearch?.setOnClickListener {
-            hideKeyboard()
-            val text = binding?.edtUrl?.text.toString().trim()
-
-            if (text.isBlank()) {
-                Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            }
-
-            if (text.isValidUrl()) {
-                downloadViaUrl(text)
-            } else {
-                downloadViaSearch(text)
-            }
         }
     }
 

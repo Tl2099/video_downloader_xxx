@@ -9,4 +9,5 @@
     <string name="txt_web">Web</string>
     <string name="txt_progress">Progress</string>
     <string name="txt_video">Video</string>
+    <string name="txt_library">Library</string>
 </resources>

@@ -23,12 +23,7 @@
     </fragment>
 
     <fragment
-        android:id="@+id/progressFragment"
-        android:name="com.example.video_downloader_xxx.ui.fragment.progress.ProgressFragment"
-        android:label="Progress" />
-
-    <fragment
-        android:id="@+id/listVideoFragment"
-        android:name="com.example.video_downloader_xxx.ui.fragment.list_video.ListVideoFragment"
-        android:label="List_Video" />
+        android:id="@+id/libraryFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.library.LibraryFragment"
+        android:label="Library" />
 </navigation>

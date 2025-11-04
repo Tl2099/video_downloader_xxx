@@ -10,13 +10,11 @@ import android.webkit.WebView
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
-import com.example.video_downloader_xxx.MainActivity
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.base.BaseFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -24,7 +22,7 @@ import java.io.File
 
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val sharedVM: SharedViewModel by activityViewModels()
-    private val downloadViewModel: DownloadViewModel by viewModel()
+    private val downloadViewModel: BrowserViewModel by viewModel()
     private val downloadService: VideoDownloadService by inject()
     private var serviceBound = false
     private lateinit var webView: WebView
