@@ -27,7 +27,7 @@
                 android:layout_gravity="end"
                 android:layout_margin="6dp"
                 android:padding="2dp"
-                android:src="@drawable/ic_close"
+                android:src="@drawable/ic_cancel"
                 android:tint="@color/gray_light" />
 
             <androidx.appcompat.widget.AppCompatImageView

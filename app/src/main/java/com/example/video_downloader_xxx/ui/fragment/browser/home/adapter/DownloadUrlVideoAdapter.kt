@@ -1,5 +1,6 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.home
+package com.example.video_downloader_xxx.ui.fragment.browser.home.adapter
 
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.video_downloader_xxx.R
@@ -30,10 +31,10 @@ class DownloadUrlVideoAdapter(
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): DownloadUrlVideoAdapter.ViewHolder {
+    ): ViewHolder {
         return ViewHolder(
             ItemVideoBinding.inflate(
-                android.view.LayoutInflater.from(parent.context),
+                LayoutInflater.from(parent.context),
                 parent,
                 false
             )
@@ -41,7 +42,7 @@ class DownloadUrlVideoAdapter(
     }
 
     override fun onBindViewHolder(
-        holder: DownloadUrlVideoAdapter.ViewHolder,
+        holder: ViewHolder,
         position: Int
     ) {
         holder.setIsRecyclable(true)

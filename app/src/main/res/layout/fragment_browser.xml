@@ -19,9 +19,10 @@
             android:id="@+id/tvHome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Video Download"
+            android:text="@string/txt_video_download"
             android:textColor="@color/black"
-            android:textSize="14sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <Space
             android:layout_width="0dp"
@@ -30,8 +31,9 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/btnMore"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:padding="6dp"
             app:srcCompat="@drawable/ic_setting" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
@@ -41,13 +43,12 @@
         android:layout_height="4dp"
         android:background="@drawable/shadow_bottom" />
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/searchFormContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="22dp"
         android:background="@drawable/bg_search"
         android:paddingVertical="16dp">
 
@@ -67,7 +68,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:background="@null"
-            android:hint="Search or enter website name"
+            android:hint="@string/txt_search_or_type_url"
             android:imeOptions="actionDone"
             android:inputType="textUri"
             android:singleLine="true"
@@ -82,9 +83,14 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icPaste"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_selector_paste"
+            android:paddingStart="9dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="4dp"
+            android:paddingBottom="7dp"
             app:layout_constraintBottom_toBottomOf="@id/icLink"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/icLink"
@@ -97,41 +103,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="20dp"
         android:background="@drawable/bg_btn_search"
         android:padding="0dp"
-        android:text="Search"
+        android:text="@string/txt_convert"
         android:textColor="@color/white"
+        android:textSize="14sp"
         app:backgroundTint="@null" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="24dp"
         android:paddingHorizontal="16dp"
-        android:text="Recently used website"
-        android:textColor="@color/black"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycleViewListRecentlyWeb"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="16dp"
-        android:clipToPadding="false"
-        android:orientation="horizontal"
-        android:overScrollMode="never"
-        android:paddingHorizontal="16dp"
-        android:scrollbars="horizontal"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/item_social_web" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:text="Download Videos From"
+        android:text="@string/txt_download_videos_from"
         android:textColor="@color/black"
         android:textSize="14sp"
         android:textStyle="bold" />
@@ -140,26 +124,60 @@
         android:id="@+id/recycleViewListSocialMedia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="16dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_browser_recycle"
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:overScrollMode="never"
-        android:paddingHorizontal="16dp"
-        android:scrollbars="horizontal"
+        android:paddingHorizontal="18dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="10dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/item_social_web" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/btnHowToDownload"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:paddingHorizontal="16dp"
+        android:text="@string/txt_recently_used_website"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycleViewListRecentlyWeb"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_browser_recycle"
+        android:clipToPadding="false"
+        android:orientation="horizontal"
+        android:overScrollMode="never"
+        android:paddingHorizontal="18dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="10dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_social_web" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnHowToDownload"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/bg_browser_text_how_to_download"
         android:gravity="center"
-        android:paddingVertical="10dp"
-        android:text="How to Download"
-        android:textColor="@color/black"
-        android:textSize="12sp" />
+        android:text="@string/txt_how_to_download"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:translationZ="4dp"
+        app:backgroundTint="@null"
+        app:icon="@drawable/ic_browser_how_to_down"
+        app:iconGravity="textStart"
+        app:iconTint="@color/white" />
 
     <ProgressBar
         android:id="@+id/progressBar"

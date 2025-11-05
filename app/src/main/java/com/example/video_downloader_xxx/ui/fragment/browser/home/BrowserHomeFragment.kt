@@ -3,37 +3,46 @@ package com.example.video_downloader_xxx.ui.fragment.browser.home
 import android.Manifest
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.FragmentBrowserBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.EndMarginDecoration
+import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.SocialAdapter
 import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
+    private val TAG = this::class.java.simpleName
     private val downloadViewModel: BrowserViewModel by viewModel()
     private val sharedVM: SharedViewModel by viewModel()
     private var pendingUrl: String? = null
+    private lateinit var clipboardManager: ClipboardManager
 
     private val socialAdapter by lazy {
         SocialAdapter(emptyList()) { social ->
             downloadViaSearch(social.websiteUrl)
         }
+    }
+
+    private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
+        checkDataInClipBoard()
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -65,15 +74,28 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initListener() {
-        binding?.recycleViewListSocialMedia?.adapter = socialAdapter
-        binding?.recycleViewListRecentlyWeb?.adapter = socialAdapter
+        val spacing = resources.getDimensionPixelSize(R.dimen.dp_12)
+        binding?.apply {
+            recycleViewListRecentlyWeb.addItemDecoration(EndMarginDecoration(spacing))
+            recycleViewListSocialMedia.addItemDecoration(EndMarginDecoration(spacing))
+            recycleViewListSocialMedia.adapter = socialAdapter
+            recycleViewListRecentlyWeb.adapter = socialAdapter
+        }
         observeSocialData()
         observeDownloadState()
+        setupUrlWatcher()
 
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager =
+            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.addPrimaryClipChangedListener(clipListener)
+        checkDataInClipBoard()
+
+        val clipData = clipboardManager.primaryClip
+        Log.i(TAG, "initListener1: $clipData")
 
         binding?.icPaste?.setOnClickListener {
-            val clipData = clipboard.primaryClip
+            val clipData = clipboardManager.primaryClip
+            Log.i(TAG, "initListener2: $clipData")
             if (clipData != null && clipData.itemCount > 0) {
                 val text = clipData.getItemAt(0).text?.toString()
                 if (!text.isNullOrEmpty()) {
@@ -81,7 +103,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     binding?.edtUrl?.setSelection(text.length)
                 }
             } else {
-                Toast.makeText(requireContext(), "Không có dữ liệu trong clipboard", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Không có dữ liệu trong clipboard",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
@@ -112,6 +138,34 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 socialAdapter.updateData(socialList.take(7))
             }
         }
+    }
+
+    private fun setupUrlWatcher() {
+        binding?.apply {
+            edtUrl.addTextChangedListener { text ->
+                val hasText = !text.isNullOrEmpty()
+                btnSearch.isSelected = hasText
+            }
+        }
+    }
+
+    private fun checkDataInClipBoard() {
+        val clip = clipboardManager.primaryClip
+        val hasData = if (clip != null && clip.itemCount > 0) {
+            val item = clip.getItemAt(0)
+            val text = item.text?.toString()
+            val uri = item.uri?.toString()
+            val intent = item.intent?.toUri(Intent.URI_INTENT_SCHEME)
+            !text.isNullOrEmpty() || !uri.isNullOrEmpty() || !intent.isNullOrEmpty()
+        } else {
+            false
+        }
+
+        Log.d(
+            "ClipboardCheck",
+            "hasData=$hasData, clip=${clipboardManager.primaryClip?.getItemAt(0)}"
+        )
+        binding?.icPaste?.isSelected = hasData
     }
 
     private fun observeDownloadState() {
@@ -165,6 +219,19 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             val action = BrowserHomeFragmentDirections.actionBrowserFragmentToWebFragment(url)
             findNavController().navigate(action)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding?.root?.post {
+            checkDataInClipBoard()
+        }
+        //checkDataInClipBoard()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        clipboardManager.removePrimaryClipChangedListener(clipListener)
     }
 
     override fun reloadAds() {

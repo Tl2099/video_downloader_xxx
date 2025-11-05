@@ -1,12 +1,14 @@
 package com.example.video_downloader_xxx.ui.fragment.browser.web
 
 import android.app.AlertDialog
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -21,6 +23,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
 
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
+    private val TAG = this::class.java.simpleName
     private val sharedVM: SharedViewModel by activityViewModels()
     private val downloadViewModel: BrowserViewModel by viewModel()
     private val downloadService: VideoDownloadService by inject()
@@ -76,6 +79,20 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
         webView.webViewClient = BrowserWebViewClient { onVideoDetected(it) }
 
+        webView.webViewClient = object : WebViewClient(){
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                Log.i(TAG, "onPageStarted: $url")
+                binding?.edtSearch?.setText(url)
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                Log.i(TAG, "onPageFinished: $url")
+                binding?.edtSearch?.setText(url)
+            }
+        }
+
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 binding?.progressBar?.apply {
@@ -83,6 +100,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                     visibility = if (newProgress < 100) View.VISIBLE else View.GONE
                 }
             }
+
         }
 
 //        binding.ivCloseTab.setOnClickListener { f }

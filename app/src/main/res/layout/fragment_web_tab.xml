@@ -11,8 +11,8 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:elevation="4dp"
-        android:background="@color/white">
+        android:background="@color/white"
+        android:elevation="4dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolBar"
@@ -29,73 +29,80 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:adjustViewBounds="true"
-                    android:contentDescription="home"
+                    android:contentDescription="@string/txt_cancel"
                     android:padding="8dp"
                     android:scaleType="centerCrop"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/ic_home" />
+                    app:srcCompat="@drawable/ic_cancel" />
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/edtSearch"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="Search or enter url"
+                    android:background="@drawable/bg_web_url_address"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:paddingHorizontal="7dp"
+                    android:paddingVertical="5dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="40dp"
                     android:singleLine="true"
+                    android:textColor="@color/black"
                     android:textSize="14sp"
                     app:layout_constraintBottom_toBottomOf="@id/ivCloseTab"
+                    app:layout_constraintEnd_toStartOf="@id/ivRefresh"
                     app:layout_constraintStart_toEndOf="@id/ivCloseTab"
                     app:layout_constraintTop_toTopOf="@id/ivCloseTab" />
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ivRefresh"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:adjustViewBounds="true"
+                    android:padding="6dp"
                     android:scaleType="centerCrop"
                     app:layout_constraintBottom_toBottomOf="@id/ivCloseTab"
-                    app:layout_constraintStart_toEndOf="@id/edtSearch"
+                    app:layout_constraintEnd_toStartOf="@id/ivGoBack"
                     app:layout_constraintTop_toTopOf="@id/ivCloseTab"
-                    app:layout_constraintVertical_bias="0.466"
                     app:srcCompat="@drawable/ic_refresh" />
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ivGoBack"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:adjustViewBounds="true"
-                    android:contentDescription="home"
-                    android:padding="8dp"
+                    android:contentDescription="@string/txt_go_back"
+                    android:padding="6dp"
                     android:scaleType="centerCrop"
                     app:layout_constraintBottom_toBottomOf="@id/ivCloseTab"
-                    app:layout_constraintStart_toEndOf="@id/ivRefresh"
+                    app:layout_constraintEnd_toStartOf="@id/ivGoForward"
                     app:layout_constraintTop_toTopOf="@id/ivCloseTab"
-                    app:srcCompat="@drawable/arrow_back" />
+                    app:srcCompat="@drawable/ic_back" />
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ivGoForward"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:adjustViewBounds="true"
-                    android:contentDescription="home"
-                    android:padding="8dp"
+                    android:contentDescription="@string/txt_go_forward"
+                    android:padding="6dp"
                     android:scaleType="centerCrop"
                     app:layout_constraintBottom_toBottomOf="@id/ivCloseTab"
-                    app:layout_constraintStart_toEndOf="@id/ivGoBack"
+                    app:layout_constraintEnd_toStartOf="@id/btnBrowserMenu"
                     app:layout_constraintTop_toTopOf="@id/ivCloseTab"
-                    app:srcCompat="@drawable/arrow_forward" />
+                    app:srcCompat="@drawable/ic_forward" />
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/btnBrowserMenu"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:contentDescription="menu"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:contentDescription="@string/txt_menu"
+                    android:padding="6dp"
                     app:layout_constraintBottom_toBottomOf="@id/ivCloseTab"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/ivGoForward"
                     app:layout_constraintTop_toTopOf="@id/ivCloseTab"
                     app:srcCompat="@drawable/ic_more" />
 
@@ -110,13 +117,14 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="5dp"
-            android:background="@color/gray"/>
+            android:layout_height="4dp"
+            android:background="@color/black" />
 
         <WebView
             android:id="@+id/webViewContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginTop="4dp"
             android:orientation="horizontal" />
 
         <ProgressBar

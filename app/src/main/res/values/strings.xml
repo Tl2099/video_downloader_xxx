@@ -10,4 +10,18 @@
     <string name="txt_progress">Progress</string>
     <string name="txt_video">Video</string>
     <string name="txt_library">Library</string>
+
+    <!--Browser Screen-->
+    <string name="txt_how_to_download">How to Download</string>
+    <string name="txt_video_download">Video Download</string>
+    <string name="txt_search_or_type_url">Search or type url</string>
+    <string name="txt_convert">Convert</string>
+    <string name="txt_download_videos_from">Download Videos From</string>
+    <string name="txt_recently_used_website">Recently used website</string>
+
+    <!--Web Screen-->
+    <string name="txt_cancel">cancel</string>
+    <string name="txt_go_back">go_back</string>
+    <string name="txt_go_forward">go_forward</string>
+    <string name="txt_menu">menu</string>
 </resources>

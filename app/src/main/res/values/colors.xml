@@ -10,8 +10,10 @@
     <color name="gray_light_1">#B8B8B8</color>
     <color name="gray_light_2">#B8CDCE</color>
     <color name="gray_light_3">#5C6464</color>
+    <color name="gray_light_4">#CECECE</color>
     <color name="gray_dark">#6E6E6E</color>
     <color name="light_grayish_blue">#DFE7E9</color>
     <color name="txt_search_hint">#494949</color>
+    <color name="bright_green">#01DF05</color>
 
 </resources>

@@ -1,4 +1,4 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.home
+package com.example.video_downloader_xxx.ui.fragment.browser.home.adapter
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater

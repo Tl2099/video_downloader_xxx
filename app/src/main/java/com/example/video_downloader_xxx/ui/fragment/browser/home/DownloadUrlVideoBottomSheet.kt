@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.BottomSheetLayoutBinding
+import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.DownloadUrlVideoAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
