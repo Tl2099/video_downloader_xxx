@@ -1,5 +1,6 @@
-package com.example.video_downloader_xxx.data.repository
+package com.example.video_downloader_xxx.data.repository.web
 
+import android.annotation.SuppressLint
 import android.util.Log
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.util.DownloadStatus
@@ -7,45 +8,49 @@ import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import com.yausername.youtubedl_android.YoutubeDLResponse
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.File
 
-class VideoDownloadManager {
+class DownloadVideosOnWebRepositoryImpl : DownloadVideosOnWebRepository {
 
-    companion object {
-        private const val TAG = "VideoDownloadManager"
-    }
-
-    suspend fun getVideoInfo(url: String): VideoInfo? = withContext(Dispatchers.IO) {
+    override suspend fun getVideoInfo(url: String): VideoInfo? = withContext(Dispatchers.IO) {
         try {
             val request = YoutubeDLRequest(url).apply {
+                addOption("--no-warnings")
                 addOption("--dump-json")
                 addOption("--no-playlist")
+                addOption("--no-download")
+                addOption("--format", "bestvideo+bestaudio/best")
+                // addOption("--extractor-args", "generic:impersonate=chrome101")
             }
 
-            Log.i(TAG, "getVideoInfo: $request")
-
+            Log.i("BrowserWebViewClient", "getVideoInfo: Executing yt-dlp request for $url")
+            val processId = "fetch_info_${System.currentTimeMillis()}"
             val response: YoutubeDLResponse =
-                YoutubeDL.getInstance().execute(request, "fetch_info", null)
+                YoutubeDL.getInstance().execute(request, processId, null)
 
-            parseVideoInfo(url, response.out)
+            if (response.out.isEmpty()) {
+                Log.e("BrowserWebViewClient", "No video information returned for URL: $url")
+                return@withContext null
+            }
+            return@withContext parseVideoInfo(url, response.out)
+
+//            videoInfo?.let {
+//                view?.post { onVideoDetected(it) }
+//            }
 
         } catch (e: Exception) {
-            e.printStackTrace()
-            Log.i(TAG, "getVideoInfo: " + e.message)
+            Log.e("BrowserWebViewClient", "yt-dlp error: ${e.message}", e)
             null
         }
     }
 
+    @SuppressLint("DefaultLocale")
     private fun parseVideoInfo(sourceUrl: String, jsonString: String): VideoInfo? {
         return try {
             val json = JSONObject(jsonString)
             val durationSec = json.optInt("duration", -1)
+
             val durationText = if (durationSec > 0) {
                 val minutes = durationSec / 60
                 val seconds = durationSec % 60
@@ -67,42 +72,8 @@ class VideoDownloadManager {
                 downloadStatus = DownloadStatus.PENDING
             )
         } catch (e: Exception) {
-            Log.e(TAG, "parseVideoInfo failed: ${e.message}")
+            Log.e("BrowserWebViewClient", "parseVideoInfo failed: ${e.message}")
             null
         }
     }
-
-    fun downloadVideo(
-        video: VideoInfo,
-        outputPath: File,
-        formatId: String? = null,
-    ): Flow<DownloadProgress> = channelFlow {
-
-        val request = YoutubeDLRequest(video.sourceUrl).apply {
-            addOption("--extractor-args", "generic:impersonate=chrome101")
-            addOption("-o", "${outputPath.absolutePath}/%(title)s.%(ext)s")
-            addOption("-f", formatId ?: "best")
-            addOption("--add-metadata")
-            addOption("--embed-thumbnail")
-        }
-
-        try {
-            YoutubeDL.getInstance().execute(request, "download") { progress, eta, line ->
-                trySend(DownloadProgress(progress, eta, line))
-            }
-
-            trySend(DownloadProgress(100f, 0, "Completed"))
-        } catch (e: Exception) {
-            trySend(DownloadProgress(-1f, 0, "Error: ${e.message}"))
-        }
-
-        awaitClose { }
-
-    }.flowOn(Dispatchers.IO)
 }
-
-data class DownloadProgress(
-    val percent: Float,
-    val etaSeconds: Long,
-    val logLine: String? = null
-)

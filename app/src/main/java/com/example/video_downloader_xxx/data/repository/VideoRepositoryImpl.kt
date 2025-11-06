@@ -1,6 +1,7 @@
 package com.example.video_downloader_xxx.data.repository
 
 import com.example.video_downloader_xxx.data.model.VideoInfo
+import com.example.video_downloader_xxx.data.repository.browser.VideoDownloadManager
 import java.io.File
 
 class VideoRepositoryImpl(

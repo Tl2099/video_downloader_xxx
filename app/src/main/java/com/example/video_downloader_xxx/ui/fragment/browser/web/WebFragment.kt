@@ -11,6 +11,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
@@ -18,6 +20,8 @@ import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
@@ -26,6 +30,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val TAG = this::class.java.simpleName
     private val sharedVM: SharedViewModel by activityViewModels()
     private val downloadViewModel: BrowserViewModel by viewModel()
+    private val webViewModel: WebViewModel by viewModel()
     private val downloadService: VideoDownloadService by inject()
     private var serviceBound = false
     private lateinit var webView: WebView
@@ -59,10 +64,12 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             }
 
             ivGoForward.setOnClickListener {
-                if(webView.canGoForward()){
+                if (webView.canGoForward()) {
                     webView.goForward()
                 }
             }
+
+
         }
         //observeDownloadEvents()
     }
@@ -77,19 +84,26 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             mediaPlaybackRequiresUserGesture = false
         }
 
-        webView.webViewClient = BrowserWebViewClient { onVideoDetected(it) }
+        webView.webViewClient = WebViewClient(
+            WebCallbacks(
+                onUrlLoaded = {
+                    webViewModel.checkUrl(it)
+                },
+                onPageStartedCallback = {
+                    Log.i(TAG, "onPageStarted: $it")
+                    resetFabState()
+                    binding?.edtSearch?.setText(it)
+                },
+                onPageFinishedCallback = {
+                    Log.i(TAG, "onPageFinished: $it")
+                    binding?.edtSearch?.setText(it)
+                }
+            )
+        )
 
-        webView.webViewClient = object : WebViewClient(){
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                Log.i(TAG, "onPageStarted: $url")
-                binding?.edtSearch?.setText(url)
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                Log.i(TAG, "onPageFinished: $url")
-                binding?.edtSearch?.setText(url)
+        lifecycleScope.launch {
+            webViewModel.videoDetected.collectLatest { info ->
+                info?.let { onVideoDetected(it) }
             }
         }
 
@@ -106,9 +120,19 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 //        binding.ivCloseTab.setOnClickListener { f }
     }
 
+    private fun resetFabState() {
+        currentVideo = null
+        detectedVideos.clear()
+        binding?.fabDownload?.isSelected = false
+    }
+
     private fun onVideoDetected(videoInfo: VideoInfo) {
         detectedVideos.add(videoInfo)
         currentVideo = videoInfo
+        binding?.fabDownload?.animate()?.setDuration(200)?.withStartAction {
+            binding?.fabDownload?.isSelected = true
+        }?.start()
+
         Log.i("WebFragment_ttdat", "onVideoDetected: ${videoInfo.sourceUrl}")
         showVideoDetectedDialog(videoInfo)
     }

@@ -1,4 +1,4 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.home
+package com.example.video_downloader_xxx.ui.fragment.browser
 
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +16,7 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
 
     private var videoList: MutableList<VideoInfo> = mutableListOf()
     private var onDownload: ((VideoInfo) -> Unit)? = null
+    private var onClose: (() -> Unit)? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,6 +48,11 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
             onDownload?.invoke(firstVideo)
             dismiss()
         }
+        binding.btnClose.setOnClickListener {
+            Log.d("BottomSheet", "Close clicked")
+            onClose?.invoke()
+            dismissAllowingStateLoss()
+        }
     }
 
     override fun onDestroyView() {
@@ -58,21 +64,25 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
     companion object {
         fun newInstance(
             video: VideoInfo,
-            onDownload: (VideoInfo) -> Unit
+            onDownload: (VideoInfo) -> Unit,
+            onClose: (() -> Unit)? = null
         ): DownloadUrlVideoBottomSheet {
             return DownloadUrlVideoBottomSheet().apply {
                 this.videoList = mutableListOf(video)
                 this.onDownload = onDownload
+                this.onClose = onClose
             }
         }
 
         fun newInstance(
             videos: MutableList<VideoInfo>,
-            onDownload: (VideoInfo) -> Unit
+            onDownload: (VideoInfo) -> Unit,
+            onClose: (() -> Unit)? = null
         ): DownloadUrlVideoBottomSheet {
             return DownloadUrlVideoBottomSheet().apply {
                 this.videoList = videos
                 this.onDownload = onDownload
+                this.onClose = onClose
             }
         }
     }

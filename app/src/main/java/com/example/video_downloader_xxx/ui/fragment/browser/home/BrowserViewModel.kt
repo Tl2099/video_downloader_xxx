@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.video_downloader_xxx.data.model.Social
 import com.example.video_downloader_xxx.data.model.VideoInfo
-import com.example.video_downloader_xxx.data.repository.SocialRepository
-import com.example.video_downloader_xxx.data.repository.VideoDownloadManager
+import com.example.video_downloader_xxx.data.repository.browser.SocialRepository
+import com.example.video_downloader_xxx.data.repository.browser.VideoDownloadManager
 import com.example.video_downloader_xxx.util.DownloadState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

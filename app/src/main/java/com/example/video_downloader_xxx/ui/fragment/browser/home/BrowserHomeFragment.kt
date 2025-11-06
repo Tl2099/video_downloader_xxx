@@ -16,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.FragmentBrowserBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
+import com.example.video_downloader_xxx.ui.fragment.browser.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.EndMarginDecoration
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.SocialAdapter
@@ -29,7 +30,10 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
-    private val TAG = this::class.java.simpleName
+    companion object {
+        const val TAG = "BrowserHomeFragment"
+    }
+
     private val downloadViewModel: BrowserViewModel by viewModel()
     private val sharedVM: SharedViewModel by viewModel()
     private var pendingUrl: String? = null
@@ -248,11 +252,18 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         lifecycleScope.launch {
             downloadViewModel.fetchVideoInfo(url)
             downloadViewModel.videoInfo.collect { video ->
+                Log.i(TAG, "Video Info: ${video?.fileSize} ${video?.duration}")
                 if (video != null) {
-                    val sheet = DownloadUrlVideoBottomSheet.newInstance(video) {
-                        Log.i("BrowserHomeFragment_ttdat", "startDownload: $it")
-                        downloadViewModel.downloadVideo(it, outFile)
-                    }
+                    val sheet = DownloadUrlVideoBottomSheet.newInstance(
+                        video,
+                        onDownload = {
+                            Log.i("BrowserHomeFragment_ttdat", "startDownload: $it")
+                            downloadViewModel.downloadVideo(it, outFile)
+                        },
+                        onClose = {
+                            Log.d("DownloadSheet", "User closed the bottom sheet")
+                        }
+                    )
                     Log.i("BrowserHomeFragment_ttdat", "Showing BottomSheet for: ${video.videoUrl}")
                     sheet.show(parentFragmentManager, "DownloadSheet")
                     return@collect
