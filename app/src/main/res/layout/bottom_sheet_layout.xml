@@ -46,17 +46,16 @@
             android:id="@+id/btnClose"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:orientation="vertical">
 
-            <ImageButton
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp">
+
+            <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:adjustViewBounds="true"
                 android:background="@null"
-                android:contentDescription="close"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_close" />
 
@@ -74,12 +73,11 @@
             android:id="@+id/btnDownload"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp">
 
-            <ImageButton
+            <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:adjustViewBounds="true"

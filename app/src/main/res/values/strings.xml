@@ -24,4 +24,9 @@
     <string name="txt_go_back">go_back</string>
     <string name="txt_go_forward">go_forward</string>
     <string name="txt_menu">menu</string>
+
+    <!--Rename Dialog-->
+    <string name="txt_cancel_dialog">Cancel</string>
+    <string name="txt_rename">Rename</string>
+
 </resources>

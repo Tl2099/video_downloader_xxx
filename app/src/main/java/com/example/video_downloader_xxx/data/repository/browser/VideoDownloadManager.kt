@@ -25,7 +25,7 @@ class VideoDownloadManager {
         private const val TAG = "VideoDownloadManager"
     }
 
-    suspend fun getVideoInfo(url: String): VideoInfo? = withContext(Dispatchers.IO) {
+    suspend fun getVideoInfo(url: String): List<VideoInfo> = withContext(Dispatchers.IO) {
         try {
             val request = YoutubeDLRequest(url).apply {
                 addOption("--dump-json")
@@ -39,62 +39,73 @@ class VideoDownloadManager {
 
             Log.i(TAG, "getVideoInfo: ${response.out}")
 
-            parseVideoInfo(url, response.out)
+            parseVideoInfoList(url, response.out)
 
         } catch (e: Exception) {
             e.printStackTrace()
             Log.i(TAG, "getVideoInfo: " + e.message)
-            null
+            emptyList()
         }
     }
 
-    private suspend fun parseVideoInfo(sourceUrl: String, jsonString: String): VideoInfo? {
-        return try {
-            val json = JSONObject(jsonString)
+    private suspend fun parseVideoInfoList(sourceUrl: String, jsonString: String): List<VideoInfo> {
+        val videoList = mutableListOf<VideoInfo>()
 
-            var durationText = json.optInt("duration", -1).takeIf { it > 0 }?.let { sec ->
-                val min = sec / 60
-                val s = sec % 60
-                "%02d:%02d".format(min, s)
-            }
-            if (durationText == null) {
-                val url = json.optString("url", null)
-                if (!url.isNullOrEmpty()) {
-                    durationText = fetchVideoDuration(url)
+        try {
+            val lines = jsonString.trim().split("\n")
+
+            for (line in lines) {
+                if (line.isBlank()) continue
+                val json = JSONObject(line)
+
+                var durationText = json.optInt("duration", -1).takeIf { it > 0 }?.let { sec ->
+                    val min = sec / 60
+                    val s = sec % 60
+                    "%02d:%02d".format(min, s)
+                } ?: json.optString("duration_string", null)
+                if (durationText == null) {
+                    val url = json.optString("url", null)
+                    if (!url.isNullOrEmpty()) {
+                        durationText = fetchVideoDuration(url)
+                    }
                 }
-            }
 
-            val fileSizeText = getFileSizeOrFetch(json)
+                val fileSizeText = getFileSizeOrFetch(json)
 
-            var thumbnailUrl = json.optString("thumbnail", null)
-            if (thumbnailUrl.isNullOrEmpty()) {
-                val thumbsArray = json.optJSONArray("thumbnails")
-                if (thumbsArray != null && thumbsArray.length() > 0) {
-                    thumbnailUrl = thumbsArray.optJSONObject(thumbsArray.length() - 1)
-                        ?.optString("url", null)
+                var thumbnailUrl = json.optString("thumbnail", null)
+//                if (thumbnailUrl.isNullOrEmpty()) {
+//                    val thumbsArray = json.optJSONArray("thumbnails")
+//                    if (thumbsArray != null && thumbsArray.length() > 0) {
+//                        thumbnailUrl = thumbsArray.optJSONObject(thumbsArray.length() - 1)
+//                            ?.optString("url", null)
+//                    }
+//                }
+                if (thumbnailUrl.isNullOrEmpty()) {
+                    val videoUrl = json.optString("url", null)
+                    if (!videoUrl.isNullOrEmpty()) {
+                        thumbnailUrl = fetchVideoThumbnail(videoUrl)
+                    }
                 }
-            }
-            if (thumbnailUrl.isNullOrEmpty()) {
-                val videoUrl = json.optString("url", null)
-                if (!videoUrl.isNullOrEmpty()) {
-                    thumbnailUrl = fetchVideoThumbnail(videoUrl)
-                }
-            }
 
-            VideoInfo(
-                sourceUrl = sourceUrl,
-                videoUrl = json.optString("url", null),
-                title = json.optString("title"),
-                thumbnailUrl = thumbnailUrl,
-                duration = durationText,
-                fileSize = fileSizeText,
-                downloadStatus = DownloadStatus.PENDING
-            )
+                videoList.add(
+                    VideoInfo(
+                        sourceUrl = sourceUrl,
+                        videoUrl = json.optString("url", null),
+                        title = json.optString("title"),
+                        thumbnailUrl = thumbnailUrl,
+                        duration = durationText,
+                        fileSize = fileSizeText,
+                        downloadStatus = DownloadStatus.PENDING
+                    )
+                )
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "parseVideoInfo failed: ${e.message}")
-            null
+            Log.e(TAG, "parseVideoInfoList failed: ${e.message}")
         }
+
+        return videoList
     }
+
 
     fun downloadVideo(
         video: VideoInfo,
@@ -102,12 +113,19 @@ class VideoDownloadManager {
         formatId: String? = null,
     ): Flow<DownloadProgress> = channelFlow {
 
+        val baseTitle = (video.title.trim().takeUnless { it.isEmpty() } ?: "video")
+            .replace(Regex("""[\\/:*?"<>|]"""), "_")
+        val uniqueTitle = ensureUniqueName(outputPath, baseTitle)
+
         val request = YoutubeDLRequest(video.sourceUrl).apply {
             addOption("--extractor-args", "generic:impersonate=chrome101")
-            addOption("-o", "${outputPath.absolutePath}/%(title)s.%(ext)s")
+            addOption("-o", File(outputPath, "$uniqueTitle.%(ext)s").absolutePath)
             addOption("-f", formatId ?: "best")
             addOption("--add-metadata")
             addOption("--embed-thumbnail")
+            addOption("--no-part")
+            addOption("--newline")
+            addOption("--no-playlist")
         }
 
         try {
@@ -124,46 +142,58 @@ class VideoDownloadManager {
 
     }.flowOn(Dispatchers.IO)
 
-    private suspend fun fetchVideoThumbnail(videoUrl: String): String? = withContext(Dispatchers.IO) {
-        try {
-            val retriever = android.media.MediaMetadataRetriever()
-            retriever.setDataSource(videoUrl, HashMap())
-            val bitmap = retriever.getFrameAtTime(0)
-            retriever.release()
+    private fun ensureUniqueName(dir: File, baseName: String): String {
+        var name = baseName
+        var idx = 1
+        while (dir.listFiles()?.any { it.nameWithoutExtension == name } == true) {
+            name = "$baseName($idx)"
+            idx++
+        }
+        return name
+    }
 
-            if (bitmap != null) {
-                val file = File.createTempFile("thumb_", ".jpg")
-                val out = FileOutputStream(file)
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
-                out.close()
-                return@withContext file.absolutePath
+    private suspend fun fetchVideoThumbnail(videoUrl: String): String? =
+        withContext(Dispatchers.IO) {
+            try {
+                val retriever = android.media.MediaMetadataRetriever()
+                retriever.setDataSource(videoUrl, HashMap())
+                val bitmap = retriever.getFrameAtTime(0)
+                retriever.release()
+
+                if (bitmap != null) {
+                    val file = File.createTempFile("thumb_", ".jpg")
+                    val out = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+                    out.close()
+                    return@withContext file.absolutePath
+                }
+                null
+            } catch (e: Exception) {
+                Log.w(TAG, "fetchVideoThumbnail failed: ${e.message}")
+                null
             }
-            null
-        } catch (e: Exception) {
-            Log.w(TAG, "fetchVideoThumbnail failed: ${e.message}")
-            null
         }
-    }
 
 
-    private suspend fun fetchVideoDuration(videoUrl: String): String? = withContext(Dispatchers.IO) {
-        try {
-            val retriever = android.media.MediaMetadataRetriever()
-            retriever.setDataSource(videoUrl, HashMap())
-            val durationMs = retriever.extractMetadata(
-                android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
-            )?.toLongOrNull() ?: return@withContext null
-            retriever.release()
+    private suspend fun fetchVideoDuration(videoUrl: String): String? =
+        withContext(Dispatchers.IO) {
+            try {
+                val retriever = android.media.MediaMetadataRetriever()
+                retriever.setDataSource(videoUrl, HashMap())
+                val durationMs = retriever.extractMetadata(
+                    android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
+                )?.toLongOrNull() ?: return@withContext null
+                retriever.release()
 
-            val totalSeconds = durationMs / 1000
-            val minutes = totalSeconds / 60
-            val seconds = totalSeconds % 60
-            "%02d:%02d".format(minutes, seconds)
-        } catch (e: Exception) {
-            Log.w(TAG, "fetchVideoDuration failed: ${e.message}")
-            null
+                val totalSeconds = durationMs / 1000
+                val minutes = totalSeconds / 60
+                val seconds = totalSeconds % 60
+                "%02d:%02d".format(minutes, seconds)
+            } catch (e: Exception) {
+                Log.w(TAG, "fetchVideoDuration failed: ${e.message}")
+                null
+            }
         }
-    }
 
 
     private suspend fun getFileSizeOrFetch(json: JSONObject): String? {

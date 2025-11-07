@@ -1,15 +1,10 @@
 package com.example.video_downloader_xxx
 
-import android.os.Bundle
 import android.view.View
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.get
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
-import androidx.viewpager2.widget.ViewPager2
 import com.example.video_downloader_xxx.databinding.ActivityMainBinding
 import com.example.video_downloader_xxx.ui.base.BaseActivity
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
@@ -17,7 +12,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
     private val sharedVM: SharedViewModel by viewModel()
-
+    private val downloadViewModel: SharedViewModel by viewModel()
     override fun initView() {
         setupBottomNav()
         handleKeyboardVisibility()

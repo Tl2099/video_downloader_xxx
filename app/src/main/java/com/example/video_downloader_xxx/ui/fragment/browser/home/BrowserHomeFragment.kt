@@ -25,17 +25,18 @@ import com.example.video_downloader_xxx.util.FileHelper
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
+import kotlin.getValue
 
 class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     companion object {
         const val TAG = "BrowserHomeFragment"
     }
-
-    private val downloadViewModel: BrowserViewModel by viewModel()
-    private val sharedVM: SharedViewModel by viewModel()
+    private val downloadViewModel: SharedViewModel by activityViewModel()
     private var pendingUrl: String? = null
     private lateinit var clipboardManager: ClipboardManager
 
@@ -67,6 +68,8 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initView() {
+        Log.d("SonLN", "onCreateDialog: $downloadViewModel")
+
         binding?.apply {
             progressBar.isIndeterminate = false
             progressBar.max = 100
@@ -75,6 +78,19 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initData() {
+        downloadViewModel.onFindVideoDone
+            .onEach { it ->
+                val sheet = DownloadUrlVideoBottomSheet.newInstance(
+                    onDownload = {
+                        val outFile = FileHelper.createVideoFile(requireContext())
+                        downloadViewModel.downloadVideo(it, outFile)
+                    },
+                    onClose = {
+                    }
+                )
+                sheet.show(parentFragmentManager, "DownloadSheet")
+            }
+            .launchIn(lifecycleScope)
     }
 
     override fun initListener() {
@@ -242,34 +258,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     private fun startDownload(url: String) {
-        val outFile = FileHelper.createVideoFile(requireContext())
-
-        Toast.makeText(requireContext(), "Saving to: ${outFile.absolutePath}", Toast.LENGTH_LONG)
-            .show()
-
-        //downloadViewModel.start(url, outFile)
-
-        lifecycleScope.launch {
-            downloadViewModel.fetchVideoInfo(url)
-            downloadViewModel.videoInfo.collect { video ->
-                Log.i(TAG, "Video Info: ${video?.fileSize} ${video?.duration}")
-                if (video != null) {
-                    val sheet = DownloadUrlVideoBottomSheet.newInstance(
-                        video,
-                        onDownload = {
-                            Log.i("BrowserHomeFragment_ttdat", "startDownload: $it")
-                            downloadViewModel.downloadVideo(it, outFile)
-                        },
-                        onClose = {
-                            Log.d("DownloadSheet", "User closed the bottom sheet")
-                        }
-                    )
-                    Log.i("BrowserHomeFragment_ttdat", "Showing BottomSheet for: ${video.videoUrl}")
-                    sheet.show(parentFragmentManager, "DownloadSheet")
-                    return@collect
-                }
-            }
-        }
+        downloadViewModel.fetchVideoInfo(url)
     }
 
     override fun getViewBinding(): FragmentBrowserBinding =

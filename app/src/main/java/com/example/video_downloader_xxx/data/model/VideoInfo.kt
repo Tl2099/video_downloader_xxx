@@ -11,5 +11,6 @@ data class VideoInfo (
     val thumbnailUrl: String? = null,
     val duration: String? = null,
     val fileSize: String? = null,
+    val isSelected: Boolean = false,
     val downloadStatus: DownloadStatus = DownloadStatus.PENDING
 )

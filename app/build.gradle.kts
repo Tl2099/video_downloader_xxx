@@ -84,8 +84,8 @@ dependencies {
     implementation("io.github.junkfood02.youtubedl-android:aria2c:0.18.0")
 
     //Koin
-    implementation("io.insert-koin:koin-android:4.1.0")
-
+    implementation("io.insert-koin:koin-android:4.1.1")
+    implementation("io.insert-koin:koin-androidx-navigation:4.1.1")
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:5.2.1")
 

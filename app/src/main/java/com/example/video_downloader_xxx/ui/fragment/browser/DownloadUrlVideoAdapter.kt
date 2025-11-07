@@ -1,5 +1,6 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.home.adapter
+package com.example.video_downloader_xxx.ui.fragment.browser
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -8,12 +9,11 @@ import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.ItemVideoBinding
 import com.example.video_downloader_xxx.util.glideLoad
 
-class DownloadUrlVideoAdapter(
-    private val video: MutableList<VideoInfo> = mutableListOf(),
-    private val onDownload: ((VideoInfo) -> Unit)? = null
-) : RecyclerView.Adapter<DownloadUrlVideoAdapter.ViewHolder>() {
+class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.ViewHolder>() {
 
-    var onClickVideo: ((VideoInfo) -> Unit)? = null
+    private val video: MutableList<VideoInfo> = mutableListOf()
+    var onRenameClick: (VideoInfo) -> Unit = {}
+    var onToggleSelect: ((VideoInfo) -> Unit)? = null
 
     inner class ViewHolder(private val binding: ItemVideoBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -24,6 +24,22 @@ class DownloadUrlVideoAdapter(
                 tvTitle.text = item.title
                 tvFileSize.text = item.fileSize
                 tvTime.text = item.duration
+
+                checkbox.setOnCheckedChangeListener(null)
+                checkbox.isChecked = item.isSelected
+                root.isSelected = item.isSelected
+
+                root.setOnClickListener {
+                    onToggleSelect?.invoke(item)
+                }
+
+                checkbox.setOnCheckedChangeListener { _, isChecked ->
+                    onToggleSelect?.invoke(item.copy(isSelected = isChecked))
+                }
+
+                btnRename.setOnClickListener {
+                    onRenameClick.invoke(item)
+                }
             }
         }
     }
@@ -45,11 +61,17 @@ class DownloadUrlVideoAdapter(
         holder: ViewHolder,
         position: Int
     ) {
-        holder.setIsRecyclable(true)
         holder.bind(video[position])
     }
 
     override fun getItemCount(): Int {
         return video.size
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun addData(list: List<VideoInfo>) {
+        video.clear()
+        video.addAll(list)
+        notifyDataSetChanged()
     }
 }
