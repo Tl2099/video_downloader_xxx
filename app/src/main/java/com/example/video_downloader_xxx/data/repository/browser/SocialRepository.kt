@@ -12,11 +12,6 @@ class SocialRepository {
                 "https://facebook.com"
             ),
             Social(
-                "YouTube",
-                "https://www.google.com/s2/favicons?sz=128&domain=youtube.com",
-                "https://youtube.com"
-            ),
-            Social(
                 "Instagram",
                 "https://www.google.com/s2/favicons?sz=128&domain=instagram.com",
                 "https://instagram.com"

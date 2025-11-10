@@ -3,6 +3,7 @@ package com.example.video_downloader_xxx.data.repository.browser
 import android.graphics.Bitmap
 import android.util.Log
 import com.example.video_downloader_xxx.data.model.VideoInfo
+import com.example.video_downloader_xxx.util.AdFilter
 import com.example.video_downloader_xxx.util.DownloadStatus
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest

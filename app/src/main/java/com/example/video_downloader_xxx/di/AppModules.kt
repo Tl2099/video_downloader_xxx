@@ -23,6 +23,6 @@ val appModules = module{
 //    single<VideoRepository> { VideoRepositoryImpl() }
     single { VideoDownloadService() }
     factory { DownloadVideoUseCase(get()) }
-    viewModel { SharedViewModel(get(), get()) }
-    viewModel { WebViewModel(get()) }
+    viewModel { SharedViewModel(get(), get(), get ()) }
+    //viewModel { WebViewModel(get()) }
 }

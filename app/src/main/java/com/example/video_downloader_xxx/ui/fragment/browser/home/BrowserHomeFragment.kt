@@ -79,7 +79,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     override fun initData() {
         downloadViewModel.onFindVideoDone
-            .onEach { it ->
+            .onEach {
                 val sheet = DownloadUrlVideoBottomSheet.newInstance(
                     onDownload = {
                         val outFile = FileHelper.createVideoFile(requireContext())

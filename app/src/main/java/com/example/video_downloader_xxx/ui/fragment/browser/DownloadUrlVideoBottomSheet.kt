@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.BottomSheetLayoutBinding
-import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.util.TextHelper
 import com.example.video_downloader_xxx.util.TextHelper.extractExtension
 import com.example.video_downloader_xxx.util.TextHelper.sanitizeFileName
@@ -26,7 +25,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
-import kotlin.getValue
 
 class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
     private var _binding: BottomSheetLayoutBinding? = null
@@ -84,6 +82,10 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
         downloadViewModel.videoList
             .filterNotNull()
             .onEach { it ->
+                Log.i(TAG, "setupRecyclerView: called")
+                for(i in it){
+                    Log.i(TAG, "setupRecyclerView: ${i.videoUrl}")
+                }
                 adapter.addData(it)
             }.launchIn(lifecycleScope)
 
@@ -174,6 +176,8 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
 
 
     companion object {
+        const val TAG = "DownloadUrlVideoBottomSheet"
+
         fun newInstance(
             onDownload: (VideoInfo) -> Unit,
             onClose: (() -> Unit)? = null
