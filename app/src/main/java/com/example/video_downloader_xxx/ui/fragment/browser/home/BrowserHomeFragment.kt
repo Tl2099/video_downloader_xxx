@@ -24,6 +24,7 @@ import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -78,19 +79,22 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initData() {
-        downloadViewModel.onFindVideoDone
-            .onEach {
-                val sheet = DownloadUrlVideoBottomSheet.newInstance(
-                    onDownload = {
-                        val outFile = FileHelper.createVideoFile(requireContext())
-                        downloadViewModel.downloadVideo(it, outFile)
-                    },
-                    onClose = {
-                    }
-                )
-                sheet.show(parentFragmentManager, "DownloadSheet")
-            }
-            .launchIn(lifecycleScope)
+        viewLifecycleOwner.lifecycleScope.launch {
+            delay(100)
+            downloadViewModel.onFindVideoDone
+                .onEach {
+                    val sheet = DownloadUrlVideoBottomSheet.newInstance(
+                        onDownload = {
+                            val outFile = FileHelper.createVideoFile(requireContext())
+                            downloadViewModel.downloadVideo(it, outFile)
+                        },
+                        onClose = {
+                        }
+                    )
+                    sheet.show(parentFragmentManager, "DownloadSheet")
+                }
+                .launchIn(lifecycleScope)
+        }
     }
 
     override fun initListener() {

@@ -29,4 +29,22 @@
     <string name="txt_cancel_dialog">Cancel</string>
     <string name="txt_rename">Rename</string>
 
+    <!--onboarding screen-->
+    <string name="btn_title_1">Fast Video Download</string>
+    <string name="btn_content_1">Just paste the link and you can download \nthe video quickly.</string>
+    <string name="btn_title_2">Missile Loading Speed</string>
+    <string name="btn_content_2">Unlimited bandwidth for lightning-fast \ndownload speeds</string>
+    <string name="btn_title_3">Easy To Download</string>
+    <string name="btn_content_3">Save videos instantly with just one tap</string>
+
+    <!--progress screen-->
+    <string name="txt_go_complete">Go to Complete</string>
+
+    <!--how to download screen-->
+    <string name="how_to_download_btn_title_1">Go to <font color="#000000"><b>Website</b></font></string>
+    <string name="how_to_download_btn_title_2"><font color="#000000"><b>Play</b></font> the video</string>
+    <string name="how_to_download_btn_title_3">Click the <font color="#000000"><b>download button</b></font></string>
+    <string name="btn_next">Next</string>
+    <string name="btn_got_it">Got it</string>
+
 </resources>
