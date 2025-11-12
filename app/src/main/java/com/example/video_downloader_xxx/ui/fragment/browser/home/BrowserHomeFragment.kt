@@ -89,6 +89,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                             downloadViewModel.downloadVideo(it, outFile)
                         },
                         onClose = {
+                            //downloadViewModel.clearDetectedVideos()
                         }
                     )
                     sheet.show(parentFragmentManager, "DownloadSheet")

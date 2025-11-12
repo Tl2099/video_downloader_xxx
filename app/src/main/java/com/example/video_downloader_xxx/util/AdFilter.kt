@@ -1,13 +1,14 @@
 package com.example.video_downloader_xxx.util
 
+import android.util.Log
 import android.webkit.WebResourceResponse
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import java.io.ByteArrayInputStream
+import java.net.URI
 import java.util.regex.Pattern
 
 class AdFilter {
     companion object {
-        // Common ad domains
         private val AD_DOMAINS = setOf(
             "googleads.com", "doubleclick.net", "googletag", "adsystem.com",
             "facebook.com/ad", "ads.yahoo.com", "amazon-adsystem.com",
@@ -17,7 +18,6 @@ class AdFilter {
             "advertising.com", "adskeeper.co.uk", "criteo.com", "adsystem.com"
         )
 
-        // Ad-related URL patterns
         private val AD_PATTERNS = listOf(
             Pattern.compile(
                 ".*\\/(ads?|advertisement|advert|adserv|adservice|adserver|adnxs|adsystem)\\/.*",
@@ -35,21 +35,26 @@ class AdFilter {
             Pattern.compile(".*banner.*\\.(gif|jpg|jpeg|png).*", Pattern.CASE_INSENSITIVE)
         )
 
-        // Non-video file extensions
         private val NON_VIDEO_EXTENSIONS = setOf(
-            // Existing extensions
             "js", "css", "html", "xml", "ico", "png", "gif", "jpg", "jpeg",
             "svg", "woff", "woff2", "ttf", "otf", "eot", "pdf", "txt", "json",
             "php", "jsp", "asp", "cur", "webp", "bmp", "tif", "tiff",
-
-            "vtt", "srt", "ass", "ssa", "sub",  // Subtitle files
-            "xml", "ttml",                       // Subtitle formats
-            "m3u", "pls",                       // Playlist files (not video)
-            "torrent"                           // Torrent files
+            "vtt", "srt", "ass", "ssa", "sub",
+            "xml", "ttml",
+            "m3u", "pls",
+            "torrent"
         )
 
+        private val NON_VIDEO_DOMAINS = setOf(
+            "youtube.com", "youtu.be",
+            "google.com", "googlevideo.com", "play.google.com",
+            "facebook.com", "fbcdn.net",
+            "twitter.com", "t.co",
+            "instagram.com", "cdninstagram.com",
+            "tiktok.com", "pinterest.com",
+            "vimeo.com", "dailymotion.com"
+        )
 
-        // Tracking and analytics patterns
         private val TRACKING_PATTERNS = listOf(
             Pattern.compile(".*\\/collect\\?.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*\\/track\\?.*", Pattern.CASE_INSENSITIVE),
@@ -58,7 +63,6 @@ class AdFilter {
             Pattern.compile(".*utm_.*", Pattern.CASE_INSENSITIVE)
         )
 
-        // API and configuration patterns
         private val API_PATTERNS = listOf(
             Pattern.compile(".*\\/api\\/.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*\\/backend\\/.*", Pattern.CASE_INSENSITIVE),
@@ -67,7 +71,6 @@ class AdFilter {
             Pattern.compile(".*\\/v\\d+\\/.*config.*", Pattern.CASE_INSENSITIVE)
         )
 
-        // Subtitle and support file patterns
         private val SUBTITLE_PATTERNS = listOf(
             Pattern.compile(".*\\/subtitle\\/.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*\\.(vtt|srt|ass|ssa|sub|ttml).*", Pattern.CASE_INSENSITIVE)
@@ -76,22 +79,9 @@ class AdFilter {
 
     }
 
-    /**
-     * Check if URL is an advertisement
-     */
     fun isAd(url: String): Boolean {
         val cleanUrl = url.lowercase().trim()
-
-        // Check domain-based blocking
-        if (isAdDomain(cleanUrl)) return true
-
-        // Check pattern-based blocking
-        if (isAdPattern(cleanUrl)) return true
-
-        // Check tracking patterns
-        if (isTrackingUrl(cleanUrl)) return true
-
-        return false
+        return isAdDomain(cleanUrl) || isAdPattern(cleanUrl) || isTrackingUrl(cleanUrl)
     }
 
     /**
@@ -127,64 +117,175 @@ class AdFilter {
         }
     }
 
+    private fun hostOf(url: String): String? = try {
+        URI(url).host?.lowercase()
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun isNonVideoDomain(url: String): Boolean {
+        val host = hostOf(url) ?: return false
+        return NON_VIDEO_DOMAINS.any { d ->
+            host == d || host.endsWith(".$d")
+        }
+    }
+
+//    fun isVideoCandidate(url: String, contentType: String?, contentLength: Long?): Boolean {
+//        val cleanUrl = url.lowercase().trim()
+//
+//        // Skip if it's an ad
+//        if (isAd(url)) return false
+//
+//         //Skip non-video domains (e.g., youtube embed, google log)
+//        if (isNonVideoDomain(cleanUrl)) return false
+//
+//         //Skip embed or logging URLs
+//        if (cleanUrl.contains("/embed/") || cleanUrl.contains("/log")) {
+//            return false
+//        }
+//
+//        // Skip non-HTTP URLs
+//        if (!cleanUrl.startsWith("http")) return false
+//
+//        // Skip API calls
+//        if (isApiCall(cleanUrl)) return false
+//
+//        // Skip subtitle files
+//        if (isSubtitleFile(cleanUrl)) return false
+//
+//        // Skip if file extension indicates non-video
+//        if (hasNonVideoExtension(cleanUrl)) return false
+//
+//        // Check content type
+//        contentType?.let { type ->
+//            val lowerType = type.lowercase()
+//
+//            // Skip non-video content types explicitly
+//            if (lowerType.contains("text/") ||
+//                lowerType.contains("application/json") ||
+//                lowerType.contains("application/xml") ||
+//                lowerType.contains("image/") ||
+//                lowerType.contains("font/") ||
+//                lowerType.contains("text/vtt") ||  // VTT subtitles
+//                lowerType.contains("application/ttml+xml")) { // TTML subtitles
+//                return false
+//            }
+//
+//            if (lowerType.contains("video") || lowerType.contains("audio") ||
+//                lowerType.contains("mpegurl") || lowerType.contains("dash")
+//            ) {
+//                return true
+//            }
+//
+//            // Skip non-media content types
+//            if (lowerType.contains("text/") || lowerType.contains("application/json") ||
+//                lowerType.contains("image/") || lowerType.contains("font/")
+//            ) {
+//                return false
+//            }
+//        }
+//
+//        // Check file size (skip very small files - likely tracking pixels)
+//        contentLength?.let {
+//            val mb = it / (1024.0 * 1024.0)
+//            if (mb < 1) return false
+//        }
+//
+//        // Check for video-like patterns in URL
+//        if (hasVideoLikePattern(cleanUrl)) return true
+//
+//        return false
+//    }
 
     fun isVideoCandidate(url: String, contentType: String?, contentLength: Long?): Boolean {
         val cleanUrl = url.lowercase().trim()
+        Log.d("AdFilterDebug", "🔍 Checking: $cleanUrl (ct=$contentType, cl=$contentLength)")
 
-        // Skip if it's an ad
-        if (isAd(url)) return false
+        if (isAd(url)) {
+            Log.d("AdFilterDebug", "❌ filtered by isAd()")
+            return false
+        }
 
-        // Skip non-HTTP URLs
-        if (!cleanUrl.startsWith("http")) return false
+        if (isNonVideoDomain(cleanUrl)) {
+            Log.d("AdFilterDebug", "❌ filtered by isNonVideoDomain()")
+            return false
+        }
 
-        // Skip API calls
-        if (isApiCall(cleanUrl)) return false
+        if (cleanUrl.contains("/embed/") || cleanUrl.contains("/log")) {
+            Log.d("AdFilterDebug", "❌ filtered by embed/log path")
+            return false
+        }
 
-        // Skip subtitle files
-        if (isSubtitleFile(cleanUrl)) return false
+        if (!cleanUrl.startsWith("http")) {
+            Log.d("AdFilterDebug", "❌ filtered by non-http scheme")
+            return false
+        }
 
-        // Skip if file extension indicates non-video
-        if (hasNonVideoExtension(cleanUrl)) return false
+        if (isApiCall(cleanUrl)) {
+            Log.d("AdFilterDebug", "❌ filtered by isApiCall()")
+            return false
+        }
 
-        // Check content type
-        contentType?.let { type ->
-            val lowerType = type.lowercase()
+        if (isSubtitleFile(cleanUrl)) {
+            Log.d("AdFilterDebug", "❌ filtered by subtitle pattern")
+            return false
+        }
 
-            // Skip non-video content types explicitly
-            if (lowerType.contains("text/") ||
-                lowerType.contains("application/json") ||
-                lowerType.contains("application/xml") ||
-                lowerType.contains("image/") ||
-                lowerType.contains("font/") ||
-                lowerType.contains("text/vtt") ||  // VTT subtitles
-                lowerType.contains("application/ttml+xml")) { // TTML subtitles
+        if (hasNonVideoExtension(cleanUrl)) {
+            Log.d("AdFilterDebug", "❌ filtered by hasNonVideoExtension()")
+            return false
+        }
+
+        // Content-Type checks
+        if (contentType != null) {
+            val lower = contentType.lowercase()
+            Log.d("AdFilterDebug", "🧩 Content-Type: $lower")
+
+            if (lower.contains("text/") ||
+                lower.contains("application/json") ||
+                lower.contains("application/xml") ||
+                lower.contains("image/") ||
+                lower.contains("font/") ||
+                lower.contains("text/vtt") ||
+                lower.contains("application/ttml+xml")
+            ) {
+                Log.d("AdFilterDebug", "❌ filtered by non-video content-type")
                 return false
             }
 
-            if (lowerType.contains("video") || lowerType.contains("audio") ||
-                lowerType.contains("mpegurl") || lowerType.contains("dash")
+            if (lower.contains("video") || lower.contains("audio") ||
+                lower.contains("mpegurl") || lower.contains("dash")
             ) {
+                Log.d("AdFilterDebug", "✅ accepted by content-type")
                 return true
             }
+        }
 
-            // Skip non-media content types
-            if (lowerType.contains("text/") || lowerType.contains("application/json") ||
-                lowerType.contains("image/") || lowerType.contains("font/")
-            ) {
+        // Content-Length check
+        if (contentLength != null) {
+            val mb = contentLength / (1024.0 * 1024.0)
+            Log.d("AdFilterDebug", "🧩 File size ≈ %.2f MB".format(mb))
+            if (mb < 1) {
+                Log.d("AdFilterDebug", "❌ filtered by small file size (<1MB)")
                 return false
             }
+        } else {
+            Log.d("AdFilterDebug", "ℹ️ Content-Length missing → skip size filter")
         }
 
-        // Check file size (skip very small files - likely tracking pixels)
-        contentLength?.let { size ->
-            if (size < 1024) return false // Less than 1KB
+        // Pattern match check
+        val patternMatch = hasVideoLikePattern(cleanUrl)
+        Log.d("AdFilterDebug", "🎯 hasVideoLikePattern = $patternMatch")
+
+        if (patternMatch) {
+            Log.d("AdFilterDebug", "✅ accepted by pattern match (.mp4 etc.)")
+            return true
         }
 
-        // Check for video-like patterns in URL
-        if (hasVideoLikePattern(cleanUrl)) return true
-
+        Log.d("AdFilterDebug", "❌ no video-like pattern found → rejected")
         return false
     }
+
 
     // Thêm helper methods
     private fun isApiCall(url: String): Boolean {
@@ -209,10 +310,6 @@ class AdFilter {
             ByteArrayInputStream("".toByteArray())
         )
     }
-
-    /**
-     * Extract clean video info and filter out ad-related metadata
-     */
 
     /**
      * Normalize URL để so sánh duplicate
@@ -268,28 +365,44 @@ class AdFilter {
     }
 
     private fun hasNonVideoExtension(url: String): Boolean {
-        val urlWithoutParams = url.split('?')[0]
+        val lower = url.lowercase().trim()
+        val urlWithoutParams = lower.substringBefore("?").substringBefore("#")
+
+        if (!urlWithoutParams.contains('.')) return false
+
+        if (urlWithoutParams.endsWith("/css") ||
+            urlWithoutParams.endsWith("/css2") ||
+            urlWithoutParams.endsWith("/js") ||
+            urlWithoutParams.endsWith("/html") ||
+            urlWithoutParams.endsWith("/xml")) {
+            return true
+        }
+
         val extension = urlWithoutParams.substringAfterLast('.', "")
-        return extension in NON_VIDEO_EXTENSIONS
+            .substringBefore("/")
+            .trim()
+
+        if (extension.isEmpty()) return false
+
+        val isNonVideo = extension in NON_VIDEO_EXTENSIONS
+        return isNonVideo
     }
 
+
     private fun hasVideoLikePattern(url: String): Boolean {
-        val videoPatterns = listOf(
-            "video",
-            "watch",
-            "play",
-            "stream",
-            "/v/",
-            "/embed/",
-            ".mp4",
-            ".avi",
-            ".mkv",
-            ".mov",
-            ".m3u8",
-            ".mpd"
-        )
-        return videoPatterns.any { pattern ->
-            url.contains(pattern, ignoreCase = true)
+        val lower = url.lowercase()
+
+        val videoExtensions = listOf(".mp4", ".mkv", ".mov", ".avi", ".webm", ".m3u8", ".mpd", ".ts")
+        if (videoExtensions.any { lower.contains(it) }) return true
+
+        val pathIndicators = listOf("/stream/", "/play/", "/hls/")
+        if (pathIndicators.any { lower.contains(it) }) return true
+
+        if (lower.contains("/video/") && !lower.contains("banner") && !lower.contains("frame") && !lower.contains("thumb")) {
+            return true
         }
+
+        return false
     }
+
 }

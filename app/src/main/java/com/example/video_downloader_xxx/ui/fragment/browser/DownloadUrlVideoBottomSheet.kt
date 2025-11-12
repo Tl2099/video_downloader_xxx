@@ -74,11 +74,20 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d(TAG, "Current video list size: ${downloadViewModel.videoList.value.size}")
         setupRecyclerView()
         setupDownloadButton()
     }
 
     private fun setupRecyclerView() {
+        binding.recycleViewListVideoDownload.adapter = adapter
+
+        val currentVideos = downloadViewModel.videoList.value
+        if (currentVideos.isNotEmpty()) {
+            Log.d(TAG, "Setting initial data: ${currentVideos.size} videos")
+            adapter.addData(currentVideos)
+        }
+
         downloadViewModel.videoList
             .filterNotNull()
             .onEach { it ->
@@ -89,7 +98,6 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
                 adapter.addData(it)
             }.launchIn(lifecycleScope)
 
-        binding.recycleViewListVideoDownload.adapter = adapter
         adapter.onToggleSelect = { downloadViewModel.toggleSelect(it) }
         adapter.onRenameClick = {
             showRenameDialog(it)

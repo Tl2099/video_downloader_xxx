@@ -11,6 +11,7 @@ import com.yausername.youtubedl_android.mapper.VideoInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Collections
 
 class WebViewClient(
     private val callbacks: WebCallbacks
@@ -18,10 +19,12 @@ class WebViewClient(
 
     private val detectedUrls = mutableSetOf<String>()
     private val adBlocker = AdFilter()
-    private val videoUrls = mutableSetOf<String>()
+    //private val videoUrls = mutableSetOf<String>()
 
     private val normalizedVideoUrls = mutableSetOf<String>()
     private val hlsStreamIds = mutableSetOf<String>()
+
+    private val videoUrls = Collections.synchronizedSet(mutableSetOf<String>())
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val newUrl = request?.url?.toString()
@@ -35,19 +38,23 @@ class WebViewClient(
     ): WebResourceResponse? {
         val url = request?.url?.toString() ?: return super.shouldInterceptRequest(view, request)
 
-        if (adBlocker.isAd(url)) {
-            Log.i("WebViewClient", "Blocked ad: $url")
+        if (url.endsWith(".mp4")) {
+            Log.w("WebViewClient", "MP4 seen by WebView: $url")
+        }
+
+        if (adBlocker.isAd(url) ) {
+            Log.i("WebViewClient", "Blocked by isAd: $url")
             return adBlocker.createBlockedResponse()
         }
-        if (adBlocker.isHLSAdSegment(url)) {
-            Log.i("WebViewClient", "Blocked HLS ad segment: $url")
+
+        if ( adBlocker.isHLSAdSegment(url)) {
+            Log.i("WebViewClient", "Blocked by isHLSAdSegment: $url")
             return adBlocker.createBlockedResponse()
         }
 
         // Handle HLS segments with duplicate prevention
         if (adBlocker.isHLSVideoSegment(url)) {
-            val normalizedUrl = adBlocker.normalizeUrl(url)
-
+            Log.d("WebViewDebug", "✅ HLS segment detected: $url")
             view?.post {
                 callbacks.onHLSSegmentDetected(url)
             }
@@ -58,16 +65,24 @@ class WebViewClient(
         val contentType = request.requestHeaders["Content-Type"]
         val contentLength = request.requestHeaders["Content-Length"]?.toLongOrNull()
 
-        if (adBlocker.isVideoCandidate(url, contentType, contentLength)) {
+        Log.d("WebViewDebug", "➡️ Checking candidate: $url ct=$contentType cl=$contentLength")
 
-            if (!videoUrls.contains(url)) {
-                videoUrls.add(url)
-                Log.i("WebViewClient", "NEW Video candidate detected: $url")
+        val isVideo = adBlocker.isVideoCandidate(url, contentType, contentLength)
+        Log.d("WebViewDebug", "📊 isVideoCandidate($url) => $isVideo")
+
+
+        if (isVideo) {
+            val normalizedUrl = adBlocker.normalizeUrl(url)
+            val added = videoUrls.add(normalizedUrl)
+            Log.d("WebViewDebug", "🧩 normalized=$normalizedUrl | added=$added")
+
+            if (added) {
+                Log.i("WebViewDebug", "🎬 NEW Video detected: $normalizedUrl")
                 view?.post {
-                    callbacks.onVideoUrlDetected(url, contentType, contentLength)
+                    callbacks.onVideoUrlDetected(normalizedUrl, contentType, contentLength)
                 }
             } else {
-                Log.d("WebViewClient", "DUPLICATE Video candidate ignored: $url")
+                Log.d("WebViewDebug", "🔁 DUPLICATE ignored: $normalizedUrl")
             }
         }
 
@@ -79,6 +94,7 @@ class WebViewClient(
         videoUrls.clear()
         normalizedVideoUrls.clear()
         hlsStreamIds.clear()
+        videoUrls.clear()
 
         Log.i("BrowserWebViewClient", "onPageStarted: $url")
         url?.let {
@@ -94,13 +110,11 @@ class WebViewClient(
         Log.d("BrowserWebViewClient", "🌐 Page loaded: $url → checking video...")
         url.let {
             callbacks.onPageFinishedCallback(it)
-            callbacks.onUrlLoaded(it)
         }
     }
 }
 
 data class WebCallbacks(
-    val onUrlLoaded: (String) -> Unit,
     val onPageStartedCallback: (String?) -> Unit,
     val onPageFinishedCallback: (String?) -> Unit,
     val onVideoUrlDetected: (String, String?, Long?) -> Unit,

@@ -26,15 +26,15 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.qualifier._q
 import java.io.File
 
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val TAG = this::class.java.simpleName
-    private val downloadViewModel: SharedViewModel by viewModel()
-
-    //private val webViewModel: WebViewModel by viewModel()
+    private val downloadViewModel: SharedViewModel by activityViewModel()
+    private val webViewModel: WebViewModel by viewModel()
     private val downloadService: VideoDownloadService by inject()
     private var serviceBound = false
     private lateinit var webView: WebView
@@ -102,12 +102,19 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
         webView.webViewClient = WebViewClient(
             WebCallbacks(
-                onUrlLoaded = {
-                    Log.i(TAG, "onUrlLoaded: $it")
-                    downloadViewModel.fetchVideoInfo(it)
-                },
+//                onUrlLoaded = {
+//                    Log.i(TAG, "onUrlLoaded: $it")
+//                    downloadViewModel.fetchVideoInfo(it)
+//                },
                 onPageStartedCallback = {
                     Log.i(TAG, "onPageStarted: $it")
+
+                    downloadViewModel.clearDetectedVideos()
+                    detectedVideos.clear()
+                    detectedVideoUrls.clear()
+                    hlsSegments.clear()
+                    hlsPlaylistUrl = null
+
                     resetFabState()
                     binding?.edtSearch?.setText(it)
                 },
@@ -116,7 +123,9 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                     binding?.edtSearch?.setText(it)
                 },
                 onVideoUrlDetected = { url, contentType, contentLength ->
+                    Log.i("ttdat", "setupWebView: $url")
                     onVideoUrlDetected(url, contentType, contentLength)
+                    webViewModel.onVideoCandidate(url, contentType, contentLength)
                 },
                 onHLSSegmentDetected = { segmentUrl ->
                     onHLSSegmentDetected(segmentUrl)
@@ -124,25 +133,31 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             )
         )
 
-        downloadViewModel.videoDetected
-            .filterNotNull()
-            .onEach {
-                Log.i(TAG, "videoDetected - test: ${it.title} ${it.fileSize} ")
-            }.launchIn(lifecycleScope)
+//        downloadViewModel.videoDetected
+//            .filterNotNull()
+//            .onEach {
+//                Log.i(TAG, "videoDetected - test: ${it.title} ${it.fileSize} ")
+//            }.launchIn(lifecycleScope)
 
-        downloadViewModel.videoList
-            .filterNotNull()
-            .onEach {
-                for (video in it) {
-                    Log.i(TAG, "videoDetected: ${video.title} ${video.fileSize} ")
-                }
-                onVideoDetected(it)
-            }.launchIn(lifecycleScope)
-//        lifecycleScope.launch {
-//            webViewModel.videoDetected.collectLatest { info ->
-//                info?.let { onVideoDetected(it) }
-//            }
-//        }
+//        webViewModel.videoDetected
+//            .filterNotNull()
+//            .onEach {
+//                Log.i(TAG, "videoDetected - test: ${it.title} ${it.fileSize} ")
+//            }.launchIn(lifecycleScope)
+
+//        downloadViewModel.videoList
+//            .filterNotNull()
+//            .onEach {
+//                for (video in it) {
+//                    Log.i(TAG, "videoDetected: ${video.title} ${video.fileSize} ")
+//                }
+//                //onVideoDetected(it)
+//            }.launchIn(lifecycleScope)
+////        lifecycleScope.launch {
+////            webViewModel.videoDetected.collectLatest { info ->
+////                info?.let { onVideoDetected(it) }
+////            }
+////        }
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -246,20 +261,20 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         binding?.fabDownload?.isSelected = false
     }
 
-    private fun onVideoDetected(listVideo: List<VideoInfo>) {
-        //detectedVideos.addAll(listVideo)
-
-        downloadViewModel.onFindVideoDone.onEach {
-            binding?.fabDownload?.animate()?.setDuration(200)?.withStartAction {
-                binding?.fabDownload?.isSelected = true
-            }?.start()
-        }.launchIn(lifecycleScope)
-
-
-        //Log.i("WebFragment_ttdat", "onVideoDetected: ${videoInfo.sourceUrl}")
-
-        //showVideoDetectedDialog(videoInfo)
-    }
+//    private fun onVideoDetected(listVideo: List<VideoInfo>) {
+//        //detectedVideos.addAll(listVideo)
+//
+//        downloadViewModel.onFindVideoDone.onEach {
+//            binding?.fabDownload?.animate()?.setDuration(200)?.withStartAction {
+//                binding?.fabDownload?.isSelected = true
+//            }?.start()
+//        }.launchIn(lifecycleScope)
+//
+//
+//        //Log.i("WebFragment_ttdat", "onVideoDetected: ${videoInfo.sourceUrl}")
+//
+//        //showVideoDetectedDialog(videoInfo)
+//    }
 
     private fun showVideoDetectedDialog(videoInfo: VideoInfo) {
         val downloadsDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
