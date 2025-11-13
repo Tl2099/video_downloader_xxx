@@ -1,5 +1,6 @@
 package com.example.video_downloader_xxx.ui.fragment.browser.web
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Build
 import android.os.Environment
@@ -16,7 +17,7 @@ import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.base.BaseFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.DownloadUrlVideoBottomSheet
+import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.util.DownloadStatus
 import com.example.video_downloader_xxx.util.FileHelper
@@ -32,20 +33,16 @@ import org.koin.core.qualifier._q
 import java.io.File
 
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
-    private val TAG = this::class.java.simpleName
+    companion object {
+        const val TAG = "WebFragment"
+    }
+
     private val downloadViewModel: SharedViewModel by activityViewModel()
-    private val webViewModel: WebViewModel by viewModel()
     private val downloadService: VideoDownloadService by inject()
     private var serviceBound = false
     private lateinit var webView: WebView
-    private var url: String? = null
-    private val detectedVideos = mutableListOf<VideoInfo>()
-    private val detectedVideoUrls = mutableSetOf<String>()
-    private val videoIdTracker = mutableSetOf<String>()
-    private val dashStreams = mutableMapOf<String, MutableList<String>>()
     private val hlsSegments = mutableSetOf<String>()
     private var hlsPlaylistUrl: String? = null
-    private var currentVideo: VideoInfo? = null
 
     override fun initView() {
         setupWebView()
@@ -83,6 +80,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         //observeDownloadEvents()
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         webView = binding?.webViewContainer ?: return
         webView.settings.apply {
@@ -109,9 +107,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                 onPageStartedCallback = {
                     Log.i(TAG, "onPageStarted: $it")
 
-                    downloadViewModel.clearDetectedVideos()
-                    detectedVideos.clear()
-                    detectedVideoUrls.clear()
+                    downloadViewModel.clearDetectedWebVideos()
                     hlsSegments.clear()
                     hlsPlaylistUrl = null
 
@@ -125,7 +121,6 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                 onVideoUrlDetected = { url, contentType, contentLength ->
                     Log.i("ttdat", "setupWebView: $url")
                     onVideoUrlDetected(url, contentType, contentLength)
-                    webViewModel.onVideoCandidate(url, contentType, contentLength)
                 },
                 onHLSSegmentDetected = { segmentUrl ->
                     onHLSSegmentDetected(segmentUrl)
@@ -166,21 +161,16 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                     visibility = if (newProgress < 100) View.VISIBLE else View.GONE
                 }
             }
-
         }
-
-//        binding.ivCloseTab.setOnClickListener { f }
     }
+
     private fun onHLSSegmentDetected(segmentUrl: String) {
         hlsSegments.add(segmentUrl)
-
-        // Tìm playlist URL từ segment URL
         val playlistUrl = extractPlaylistFromSegment(segmentUrl)
 
         if (playlistUrl != null && playlistUrl != hlsPlaylistUrl) {
             hlsPlaylistUrl = playlistUrl
 
-            // Tạo VideoInfo từ HLS playlist
             val videoInfo = createVideoInfoFromHLS(playlistUrl, segmentUrl)
             downloadViewModel.addDetectedVideo(videoInfo)
 
@@ -198,7 +188,8 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         val quality = Regex("/(\\d+k)/").find(sampleSegmentUrl)?.groupValues?.get(1) ?: "unknown"
 
         // Extract video ID
-        val videoId = Regex("/\\d{8}/(\\w+)/").find(sampleSegmentUrl)?.groupValues?.get(1) ?: "video"
+        val videoId =
+            Regex("/\\d{8}/(\\w+)/").find(sampleSegmentUrl)?.groupValues?.get(1) ?: "video"
 
         return VideoInfo(
             sourceUrl = webView.url ?: playlistUrl,
@@ -215,13 +206,11 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         Log.i(TAG, "Video URL detected: $url")
         Log.i(TAG, "Content-Type: $contentType, Size: $contentLength")
 
-        detectedVideoUrls.add(url)
-
-        // Tạo VideoInfo từ thông tin cơ bản
-        val videoInfo = createVideoInfoFromUrl(url, contentType, contentLength)
-
-        // Thêm vào list để hiển thị
-        downloadViewModel.addDetectedVideo(videoInfo)
+        downloadViewModel.addVideo(url)
+//        val videoInfo = createVideoInfoFromUrl(url, contentType, contentLength)
+//
+//        // Thêm vào list để hiển thị
+//        downloadViewModel.addDetectedVideo(videoInfo)
 
         // Update FAB state
         binding?.fabDownload?.animate()?.setDuration(200)?.withStartAction {
@@ -229,7 +218,11 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         }?.start()
     }
 
-    private fun createVideoInfoFromUrl(url: String, contentType: String?, contentLength: Long?): VideoInfo {
+    private fun createVideoInfoFromUrl(
+        url: String,
+        contentType: String?,
+        contentLength: Long?
+    ): VideoInfo {
         val title = extractTitleFromUrl(url) ?: "Video ${System.currentTimeMillis()}"
 
         val fileSize = contentLength?.let { size ->
@@ -257,7 +250,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
 
     private fun resetFabState() {
-        detectedVideos.clear()
+        //detectedVideos.clear()
         binding?.fabDownload?.isSelected = false
     }
 
@@ -350,9 +343,9 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     }
 
     private fun showBottomSheet() {
-        val sheet = DownloadUrlVideoBottomSheet.newInstance(
+        val sheet = DownloadVideoWebBottomSheet.newInstance(
             onDownload = {
-                Log.i(TAG, "onDownload: ${it.sourceUrl}")
+                Log.i(TAG, "onDownload: ${it.videoUrl}")
                 val outFile = FileHelper.createVideoFile(requireContext())
                 downloadViewModel.downloadVideo(it, outFile)
             },

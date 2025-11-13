@@ -7,6 +7,10 @@ import android.os.Environment
 import android.os.IBinder
 import android.util.Log
 import com.example.video_downloader_xxx.data.model.VideoInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -14,6 +18,7 @@ import java.io.FileOutputStream
 
 class VideoDownloadService : Service() {
     private val binder = DownloadBinder()
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val downloads = mutableMapOf<String, DownloadTask>()
 
 
@@ -23,13 +28,24 @@ class VideoDownloadService : Service() {
 
     override fun onBind(p0: Intent?): IBinder? = binder
 
-    fun startDownload(videoInfo: VideoInfo){
-        val task = DownloadTask(videoInfo) { progress ->
-            updateProgress(videoInfo.id, progress)
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val url = intent?.getStringExtra("url")
+        if (url != null) {
+            startDownload(url)
         }
-        Log.i("VideoDownloadService_ttdat", "startDownload: ${videoInfo.sourceUrl}")
-        downloads[videoInfo.id] = task
-        task.start()
+        return START_STICKY
+    }
+
+    fun startDownload(url: String){
+        scope.launch {
+
+        }
+//        val task = DownloadTask(videoInfo) { progress ->
+//            updateProgress(videoInfo.id, progress)
+//        }
+//        Log.i("VideoDownloadService_ttdat", "startDownload: ${videoInfo.sourceUrl}")
+//        downloads[videoInfo.id] = task
+//        task.start()
     }
 
     private fun updateProgress(videoId: String, progress: Int){

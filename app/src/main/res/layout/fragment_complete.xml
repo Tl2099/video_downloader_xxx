@@ -3,12 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:gravity="center"
+    android:background="@color/powder_blue"
     android:orientation="vertical">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycleViewListVideoProgress"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_video_complete" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imgEmpty"
         android:layout_width="wrap_content"
+        android:visibility="gone"
         android:layout_height="wrap_content"
         android:scaleType="centerCrop"
         app:srcCompat="@drawable/complete_img_1" />

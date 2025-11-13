@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -22,6 +23,9 @@ class SharedViewModel(
     private val repository: SocialRepository,
     private val repositoryDownload: DownloadVideosOnWebRepository
 ) : ViewModel() {
+
+    private val _videoWebList = MutableStateFlow<List<VideoInfo>>(emptyList())
+    val videoWebList: StateFlow<List<VideoInfo>> = _videoWebList.asStateFlow()
 
     private val _videoList = MutableStateFlow<List<VideoInfo>>(emptyList())
     val videoList: StateFlow<List<VideoInfo>> = _videoList.asStateFlow()
@@ -58,36 +62,69 @@ class SharedViewModel(
         _videoList.value = emptyList()
     }
 
+    fun clearDetectedWebVideos() {
+        _videoWebList.value = emptyList()
+    }
+
     private fun loadSocials() {
         _social.value = repository.getDefaultSocials()
     }
 
-    fun toggleSelect(video: VideoInfo){
+    fun toggleSelect(video: VideoInfo) {
         _videoList.value = _videoList.value.map {
-            if(it.videoUrl == video.videoUrl) {
+            if (it.videoUrl == video.videoUrl) {
                 it.copy(isSelected = !it.isSelected)
-            }else{
+            } else {
                 it
             }
         }
+    }
+
+    fun toggleVideoSelect(video: VideoInfo) {
+        Log.d("DEBUG", "toggleSelect called for: ${video.id} | ${video.videoUrl}")
+        _videoWebList.value = _videoWebList.value.map {
+            Log.d("DEBUG", "Checking: ${it.id} | ${it.videoUrl} | selected=${it.isSelected}")
+            if (it.videoUrl == video.videoUrl) {
+                Log.d("DEBUG", "MATCH found - toggling ${it.id}")
+                it.copy(isSelected = !it.isSelected)
+            } else {
+                it
+            }
+        }
+        Log.d("DEBUG", "Final list size: ${_videoList.value.size}")
     }
 
     fun getSelectedVideos(): List<VideoInfo> = _videoList.value.filter { it.isSelected }
 
-    fun rename(video: VideoInfo, newName: String){
+    fun getSelectedWebVideos(): List<VideoInfo> = _videoWebList.value.filter { it.isSelected }
+
+    fun rename(video: VideoInfo, newName: String) {
         _videoList.value = _videoList.value.map {
-            if(it.videoUrl == video.videoUrl) {
+            if (it.videoUrl == video.videoUrl) {
                 it.copy(title = newName)
-            }else {
+            } else {
                 it
             }
         }
     }
 
-    fun fetchVideoInfo(url: String){
+    fun renameVideoWeb(video: VideoInfo, newName: String) {
+        _videoWebList.value = _videoWebList.value.map {
+            if (it.videoUrl == video.videoUrl) {
+                it.copy(title = newName)
+            } else {
+                it
+            }
+        }
+    }
+
+    fun fetchVideoInfo(url: String) {
         viewModelScope.launch {
             try {
-                _videoList.value = manager.getVideoInfo(url).map { it.copy(isSelected = true) }
+                _videoList.update {
+                    manager.getVideoInfo(url).map { it.copy(isSelected = true) }
+                }
+
                 _videoDetected.value = repositoryDownload.getVideoInfo(url)
                 Log.i("SharedViewModel", "fetchVideoInfo: ${_videoDetected.value} ")
                 if (_videoList.value.isEmpty()) {
@@ -99,6 +136,24 @@ class SharedViewModel(
                 Log.e("DownloadViewModel", "Error fetching video info: ${e.message}", e)
                 _downloadVideoState.value =
                     DownloadState.Error("Error fetching video info: ${e.message}")
+            }
+        }
+    }
+
+    fun addVideo(url: String) {
+        viewModelScope.launch {
+            Log.i("TTDAT_SHAREVM", "url : $url")
+            val video = repositoryDownload.getVideoInfo(url)
+            Log.i("TTDAT_SHAREVM", "addVideo: ${video?.videoUrl}")
+            if (video != null) {
+                _videoWebList.update { currentList ->
+                    if (currentList.any { it.videoUrl == video.videoUrl }) {
+                        Log.i("TTDAT_SHAREVM", "Video trùng URL, bỏ qua!")
+                        currentList
+                    } else {
+                        currentList + video
+                    }
+                }
             }
         }
     }

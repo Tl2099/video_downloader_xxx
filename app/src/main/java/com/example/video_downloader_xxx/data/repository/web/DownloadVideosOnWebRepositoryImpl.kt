@@ -35,10 +35,6 @@ class DownloadVideosOnWebRepositoryImpl : DownloadVideosOnWebRepository {
             }
             return@withContext parseVideoInfo(url, response.out)
 
-//            videoInfo?.let {
-//                view?.post { onVideoDetected(it) }
-//            }
-
         } catch (e: Exception) {
             Log.e("BrowserWebViewClient", "yt-dlp error: ${e.message}", e)
             null

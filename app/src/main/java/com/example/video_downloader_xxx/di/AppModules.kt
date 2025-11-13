@@ -8,7 +8,6 @@ import com.example.video_downloader_xxx.data.repository.web.DownloadVideosOnWebR
 import com.example.video_downloader_xxx.domain.usecase.DownloadVideoUseCase
 import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
-import com.example.video_downloader_xxx.ui.fragment.browser.web.WebViewModel
 import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -24,5 +23,4 @@ val appModules = module{
     single { VideoDownloadService() }
     factory { DownloadVideoUseCase(get()) }
     viewModel { SharedViewModel(get(), get(), get ()) }
-    viewModel { WebViewModel(get()) }
 }

@@ -16,7 +16,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.FragmentBrowserBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.DownloadUrlVideoBottomSheet
+import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.EndMarginDecoration
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.SocialAdapter
@@ -154,6 +154,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             }
 
             binding?.edtUrl?.text?.clear()
+            downloadViewModel.clearDetectedVideos()
         }
     }
 
