@@ -13,6 +13,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
@@ -124,6 +125,7 @@ class VideoDownloadManager {
             addOption("-f", formatId ?: "best")
             addOption("--add-metadata")
             addOption("--embed-thumbnail")
+            addOption("--continue")
             addOption("--no-part")
             addOption("--newline")
             addOption("--no-playlist")

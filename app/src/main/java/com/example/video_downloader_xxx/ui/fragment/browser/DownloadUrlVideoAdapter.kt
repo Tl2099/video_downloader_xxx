@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.video_downloader_xxx.R
+import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.ItemVideoBinding
 import com.example.video_downloader_xxx.util.glideLoad
@@ -29,8 +30,11 @@ class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.V
                 checkbox.isChecked = item.isSelected
                 root.isSelected = item.isSelected
 
+
+
                 root.setOnClickListener {
                     onToggleSelect?.invoke(item)
+                    DataExt.listUrl.add(item.videoUrl ?: "")
                 }
 
                 checkbox.setOnCheckedChangeListener { _, isChecked ->

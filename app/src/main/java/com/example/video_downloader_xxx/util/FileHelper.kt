@@ -33,6 +33,13 @@ object FileHelper {
         return videoDir
     }
 
+    fun getVideoFolder(context: Context): File {
+        val dir = File(context.getExternalFilesDir(null), "videos")
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
+
+
     fun createVideoFile(context: Context): File {
         val dir = getAppVideoDir(context)
         val fileName = "video_${System.currentTimeMillis()}.mp4"

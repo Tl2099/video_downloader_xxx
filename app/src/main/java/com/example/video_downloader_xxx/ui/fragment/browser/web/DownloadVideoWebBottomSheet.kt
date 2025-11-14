@@ -13,6 +13,8 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.example.video_downloader_xxx.R
+import com.example.video_downloader_xxx.data.DataExt
+import com.example.video_downloader_xxx.data.DataExt.listVideoInfo
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.BottomSheetLayoutBinding
 import com.example.video_downloader_xxx.ui.fragment.browser.DownloadUrlVideoAdapter
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
+import kotlin.math.log
 
 class DownloadVideoWebBottomSheet() : BottomSheetDialogFragment() {
     private var _binding: BottomSheetLayoutBinding? = null
@@ -112,14 +115,21 @@ class DownloadVideoWebBottomSheet() : BottomSheetDialogFragment() {
 
     private fun setupDownloadButton() {
         binding.btnDownload.setOnClickListener {
+            Log.e("forEachIndexed", "index: "+DataExt.listUrl )
+
+            var abc = DataExt.listUrl[DataExt.indexPos]
+            //
             val listVideoSelected = downloadViewModel.getSelectedWebVideos()
+            Log.i(TAG, "setupDownloadButton: ${listVideoSelected.size}")
             if (listVideoSelected.isEmpty()) {
                 Toast.makeText(requireContext(), "Chưa chọn video nào", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             } else {
+                listVideoInfo.addAll(listVideoSelected)
+                Log.i(TAG, "listVideoInfo: ${listVideoInfo.size}")
                 listVideoSelected.forEach {
                     Log.i(TAG, "setupDownloadButton: ${it.videoUrl}")
-                    onDownload?.invoke(it) 
+                    onDownload?.invoke(it)
                 }
             }
             dismissAllowingStateLoss()

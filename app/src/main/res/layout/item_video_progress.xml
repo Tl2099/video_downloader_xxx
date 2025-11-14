@@ -85,6 +85,7 @@
         android:maxLines="1"
         android:layout_marginTop="12dp"
         android:text="Không chê"
+        android:visibility="gone"
         android:textColor="@color/gray_dark_1"
         android:textSize="10sp"
         app:layout_constraintStart_toStartOf="@id/progressBar"

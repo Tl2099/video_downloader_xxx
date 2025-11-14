@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.video_downloader_xxx.BuildConfig
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.FragmentBrowserBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
@@ -133,6 +134,14 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     "Không có dữ liệu trong clipboard",
                     Toast.LENGTH_SHORT
                 ).show()
+            }
+        }
+
+        binding?.run {
+
+            if (BuildConfig.DEBUG) {
+                edtUrl.setText("xem phim")
+                btnSearch.isSelected = true
             }
         }
 

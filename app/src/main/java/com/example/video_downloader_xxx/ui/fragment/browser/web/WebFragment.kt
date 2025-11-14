@@ -2,8 +2,14 @@ package com.example.video_downloader_xxx.ui.fragment.browser.web
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.ComponentName
+import android.content.Context.BIND_AUTO_CREATE
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
+import android.os.IBinder
 import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
@@ -13,6 +19,7 @@ import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
@@ -33,16 +40,49 @@ import org.koin.core.qualifier._q
 import java.io.File
 
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
-    companion object {
-        const val TAG = "WebFragment"
-    }
-
     private val downloadViewModel: SharedViewModel by activityViewModel()
-    private val downloadService: VideoDownloadService by inject()
-    private var serviceBound = false
     private lateinit var webView: WebView
     private val hlsSegments = mutableSetOf<String>()
     private var hlsPlaylistUrl: String? = null
+
+    private var downloadService: VideoDownloadService? = null
+    private var serviceBound = false
+    private val serviceConnection = object : ServiceConnection{
+        override fun onServiceConnected(
+            name: ComponentName?,
+            service: IBinder?
+        ) {
+            val binder = service as VideoDownloadService.DownloadBinder
+            downloadService = binder.getService()
+            serviceBound = true
+            Log.i(TAG, "Service connected")
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            downloadService = null
+            serviceBound = false
+            Log.i(TAG, "Service disconnected")
+        }
+
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        bindDownloadService()
+    }
+
+    private fun bindDownloadService() {
+        val intent = Intent(requireContext(), VideoDownloadService::class.java)
+        requireContext().bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (serviceBound) {
+            requireContext().unbindService(serviceConnection)
+            serviceBound = false
+        }
+    }
 
     override fun initView() {
         setupWebView()
@@ -294,16 +334,16 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             .show()
     }
 
-    private fun startDownload(videoInfo: VideoInfo) {
-        Log.i("WebFragment_ttdat", "startDownload: Called")
-        downloadService.startDownload(videoInfo)
-        if (serviceBound) {
-            Log.i("WebFragment_ttdat", "startDownload: ${videoInfo.title}")
-            downloadService.startDownload(videoInfo)
-        }
-        Toast.makeText(requireContext(), "Download started!", Toast.LENGTH_SHORT).show()
-
-    }
+//    private fun startDownload(videoInfo: VideoInfo) {
+//        Log.i("WebFragment_ttdat", "startDownload: Called")
+//        downloadService.startDownload(videoInfo)
+//        if (serviceBound) {
+//            Log.i("WebFragment_ttdat", "startDownload: ${videoInfo.title}")
+//            downloadService.startDownload(videoInfo)
+//        }
+//        Toast.makeText(requireContext(), "Download started!", Toast.LENGTH_SHORT).show()
+//
+//    }
 
 //    private fun observeDownloadEvents() {
 //        downloadViewModel.downloadVideoEvent.observe(viewLifecycleOwner) { videoInfo ->
@@ -346,8 +386,11 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         val sheet = DownloadVideoWebBottomSheet.newInstance(
             onDownload = {
                 Log.i(TAG, "onDownload: ${it.videoUrl}")
-                val outFile = FileHelper.createVideoFile(requireContext())
-                downloadViewModel.downloadVideo(it, outFile)
+
+                //val outFile = FileHelper.createVideoFile(requireContext())
+                //downloadViewModel.downloadVideo(it, outFile)
+
+                startDownload(it)
             },
             onClose = {
             }
@@ -355,9 +398,31 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         sheet.show(parentFragmentManager, "DownloadSheet")
     }
 
+    private fun startDownload(videoInfo: VideoInfo) {
+        Log.i(TAG, "startDownload called for: ${videoInfo.title}")
+        val context = requireContext().applicationContext
+        val intent = Intent(context, VideoDownloadService::class.java).apply {
+            putExtra(VideoDownloadService.EXTRA_ID, videoInfo.id)
+            putExtra(VideoDownloadService.EXTRA_SOURCE_URL, videoInfo.sourceUrl)
+            putExtra(VideoDownloadService.EXTRA_VIDEO_URL, videoInfo.videoUrl)
+            putExtra(VideoDownloadService.EXTRA_TITLE, videoInfo.title)
+            putExtra(VideoDownloadService.EXTRA_THUMB, videoInfo.thumbnailUrl)
+            putExtra(VideoDownloadService.EXTRA_DURATION, videoInfo.duration)
+            putExtra(VideoDownloadService.EXTRA_FILE_SIZE, videoInfo.fileSize)
+        }
+
+        context.startService(intent)
+
+        Toast.makeText(context, "Download started: ${videoInfo.title}", Toast.LENGTH_SHORT).show()
+    }
+
     override fun reloadAds() {
     }
 
     override fun getViewBinding(): FragmentWebTabBinding =
         FragmentWebTabBinding.inflate(layoutInflater)
+
+    companion object {
+        const val TAG = "WebFragment"
+    }
 }
