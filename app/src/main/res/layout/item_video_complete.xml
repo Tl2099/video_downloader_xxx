@@ -88,5 +88,4 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_more" />
 
-
 </androidx.constraintlayout.widget.ConstraintLayout>

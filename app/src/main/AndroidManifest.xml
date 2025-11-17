@@ -22,7 +22,7 @@
         android:theme="@style/Theme.Video_downloader_xxx"
         android:requestLegacyExternalStorage="true">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.activity.SplashActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter>
@@ -33,7 +33,11 @@
         </activity>
 
         <activity
-            android:name=".ui.PlayerActivity"
+            android:name=".ui.activity.MainActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.PlayerActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

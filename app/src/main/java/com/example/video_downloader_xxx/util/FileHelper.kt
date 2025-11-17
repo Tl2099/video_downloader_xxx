@@ -3,6 +3,7 @@ package com.example.video_downloader_xxx.util
 import android.content.Context
 import android.os.Build
 import android.os.Environment
+import android.webkit.MimeTypeMap
 import java.io.File
 
 object FileHelper {
@@ -40,9 +41,10 @@ object FileHelper {
     }
 
 
-    fun createVideoFile(context: Context): File {
+    fun createVideoFile(context: Context, url: String): File {
+        val ext = MimeTypeMap.getFileExtensionFromUrl(url)
         val dir = getAppVideoDir(context)
-        val fileName = "video_${System.currentTimeMillis()}.mp4"
+        val fileName = "video_${System.currentTimeMillis()}.${ext}"
         return File(dir, fileName)
     }
 

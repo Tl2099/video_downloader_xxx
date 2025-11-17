@@ -2,6 +2,7 @@ package com.example.video_downloader_xxx.ui.fragment.browser.web
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.Service.START_NOT_STICKY
 import android.content.ComponentName
 import android.content.Context.BIND_AUTO_CREATE
 import android.content.Intent
@@ -23,6 +24,13 @@ import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
+import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_DURATION
+import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_FILE_SIZE
+import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_ID
+import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_SOURCE_URL
+import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_THUMB
+import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_TITLE
+import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_VIDEO_URL
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
@@ -68,7 +76,6 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        bindDownloadService()
     }
 
     private fun bindDownloadService() {
@@ -78,9 +85,13 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (serviceBound) {
-            requireContext().unbindService(serviceConnection)
-            serviceBound = false
+        try {
+            if (serviceBound) {
+                requireContext().unbindService(serviceConnection)
+                serviceBound = false
+            }
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "Service was not bound, cannot unbind.")
         }
     }
 
@@ -401,18 +412,27 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private fun startDownload(videoInfo: VideoInfo) {
         Log.i(TAG, "startDownload called for: ${videoInfo.title}")
         val context = requireContext().applicationContext
+
+        if (downloadService?.isAlreadyQueuedOrDownloading(videoInfo.id) == true) {
+            Toast.makeText(context, "Video is already in download queue", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val intent = Intent(context, VideoDownloadService::class.java).apply {
-            putExtra(VideoDownloadService.EXTRA_ID, videoInfo.id)
-            putExtra(VideoDownloadService.EXTRA_SOURCE_URL, videoInfo.sourceUrl)
-            putExtra(VideoDownloadService.EXTRA_VIDEO_URL, videoInfo.videoUrl)
-            putExtra(VideoDownloadService.EXTRA_TITLE, videoInfo.title)
-            putExtra(VideoDownloadService.EXTRA_THUMB, videoInfo.thumbnailUrl)
-            putExtra(VideoDownloadService.EXTRA_DURATION, videoInfo.duration)
-            putExtra(VideoDownloadService.EXTRA_FILE_SIZE, videoInfo.fileSize)
+            putExtra(EXTRA_ID, videoInfo.id)
+            putExtra(EXTRA_SOURCE_URL, videoInfo.sourceUrl)
+            putExtra(EXTRA_VIDEO_URL, videoInfo.videoUrl)
+            putExtra(EXTRA_TITLE, videoInfo.title)
+            putExtra(EXTRA_THUMB, videoInfo.thumbnailUrl)
+            putExtra(EXTRA_DURATION, videoInfo.duration)
+            putExtra(EXTRA_FILE_SIZE, videoInfo.fileSize)
         }
 
         context.startService(intent)
 
+        if (!serviceBound) {
+            context.bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        }
         Toast.makeText(context, "Download started: ${videoInfo.title}", Toast.LENGTH_SHORT).show()
     }
 

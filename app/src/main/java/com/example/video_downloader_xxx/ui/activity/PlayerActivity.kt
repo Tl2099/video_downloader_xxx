@@ -1,4 +1,4 @@
-package com.example.video_downloader_xxx.ui
+package com.example.video_downloader_xxx.ui.activity
 
 import android.net.Uri
 import android.os.Bundle
@@ -15,15 +15,18 @@ class PlayerActivity : BaseActivity<ActivityPlayerBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i("PlayerActivity", "onCreate: ")
 
-        val uriVideo = Uri.parse("android.resource://${packageName}/${DataExt.path}")
+        //val uriVideo = Uri.parse("android.resource://${packageName}/${DataExt.path}")
+        val path = DataExt.path
+        val uriVideo = Uri.fromFile(File(path))
 
-        Log.d("LamnhNguvl", ""+uriVideo )
+        Log.d("PlayerActivity", ""+uriVideo )
         player = ExoPlayer.Builder(this).build()
 
         binding.playerView.player = player
 
-        player.setMediaItem(MediaItem.fromUri(DataExt.path))
+        player.setMediaItem(MediaItem.fromUri(uriVideo))
         player.prepare()
         player.play()
     }
@@ -35,6 +38,10 @@ class PlayerActivity : BaseActivity<ActivityPlayerBinding>() {
     }
 
     override fun initListener() {
+        binding.btnBack.setOnClickListener {
+            Log.i("PlayerActivity", "btnBack: Called")
+            finish()
+        }
     }
 
     override fun viewBinding(): ActivityPlayerBinding = ActivityPlayerBinding.inflate(layoutInflater)

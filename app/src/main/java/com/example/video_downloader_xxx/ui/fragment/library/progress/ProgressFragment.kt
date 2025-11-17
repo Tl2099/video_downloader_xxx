@@ -8,7 +8,6 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.video_downloader_xxx.data.repository.library.DownloadRepository
 import com.example.video_downloader_xxx.databinding.FragmentProgressBinding
@@ -18,11 +17,11 @@ import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class ProgressFragment : BaseFragment<FragmentProgressBinding>() {
 
-    private val library: LibraryViewModel by activityViewModels()
+    private val library: LibraryViewModel by activityViewModel()
     private val adapter: VideoLoadingAdapter by lazy { VideoLoadingAdapter() }
 
     private var downloadService: VideoDownloadService? = null

@@ -3,7 +3,6 @@ package com.example.video_downloader_xxx.data.repository.browser
 import android.graphics.Bitmap
 import android.util.Log
 import com.example.video_downloader_xxx.data.model.VideoInfo
-import com.example.video_downloader_xxx.util.AdFilter
 import com.example.video_downloader_xxx.util.DownloadStatus
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
@@ -13,13 +12,10 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 
 class VideoDownloadManager {
 
@@ -140,8 +136,6 @@ class VideoDownloadManager {
         } catch (e: Exception) {
             trySend(DownloadProgress(-1f, 0, "Error: ${e.message}"))
         }
-
-        awaitClose { }
 
     }.flowOn(Dispatchers.IO)
 

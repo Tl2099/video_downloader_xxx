@@ -8,15 +8,17 @@ import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.DataExt.indexPos
 import com.example.video_downloader_xxx.data.DataExt.listUrl
 import com.example.video_downloader_xxx.databinding.FragmentCompleteBinding
-import com.example.video_downloader_xxx.ui.PlayerActivity
+import com.example.video_downloader_xxx.service.VideoDownloadService
+import com.example.video_downloader_xxx.ui.activity.PlayerActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
-    private val library: LibraryViewModel by activityViewModels()
+    private val library: LibraryViewModel by activityViewModel()
     private val adapter: VideoCompleteAdapter by lazy { VideoCompleteAdapter() }
 
     override fun initView() {
@@ -24,30 +26,46 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
 
     override fun initData() {
         binding?.recycleViewListVideoProgress?.adapter = adapter
-        library.completedVideos
+        library.videos
             .filterNotNull()
             .onEach {
+                for (i in it) {
+                    Log.i(TAG, "=== Info download ===")
+                    Log.i(TAG, "Title: ${i.title}")
+                    Log.i(TAG, "ID: ${i.id}")
+                    Log.i(TAG, "VideoURL: ${i.videoUrl}")
+                    Log.i(TAG, "SourceURL: ${i.sourceUrl}")
+                    Log.i(TAG, "Active jobs: ${i.fileSize}")
+                    Log.i(TAG, "localPath:${i.localPath}")
+                }
                 adapter.addData(it)
             }.launchIn(lifecycleScope)
     }
 
     override fun initListener() {
         adapter.onItemClick = { video ->
+            Log.i(TAG, "initListener: ${video.localPath} ${DataExt.path}")
             video.localPath?.let { path ->
                 DataExt.path = path
-                //Log.i(TAG, "initListener: $path")
-                if (listUrl.size == 1){
-                    startActivity(Intent(requireContext(), PlayerActivity::class.java))
-                }else{
-                    //Check Size  list
-                    indexPos++
-                    if(indexPos <= listUrl.size){
-                        listUrl[indexPos]
-                    }else{
-                        indexPos = 0
-                    }
-                }
+                Log.i(TAG, "initListener: $path ${DataExt.path}")
+                startActivity(Intent(requireContext(), PlayerActivity::class.java))
+
+//                if (listUrl.size == 1){
+//                    startActivity(Intent(requireContext(), PlayerActivity::class.java))
+//                }else{
+//                    //Check Size  list
+//                    indexPos++
+//                    if(indexPos <= listUrl.size){
+//                        listUrl[indexPos]
+//                    }else{
+//                        indexPos = 0
+//                    }
+//                }
             }
+        }
+
+        binding?.btnDeleteAll?.setOnClickListener {
+            library.deleteAll()
         }
     }
 

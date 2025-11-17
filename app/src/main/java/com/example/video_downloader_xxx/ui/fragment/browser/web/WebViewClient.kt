@@ -7,10 +7,6 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.example.video_downloader_xxx.util.AdFilter
-import com.yausername.youtubedl_android.mapper.VideoInfo
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.Collections
 
 class WebViewClient(
@@ -77,9 +73,15 @@ class WebViewClient(
             Log.d("WebViewDebug", "🧩 normalized=$normalizedUrl | added=$added")
 
             if (added) {
-                Log.i("WebViewDebug", "🎬 NEW Video detected: $normalizedUrl")
+                val mimeTypeFromUrl = adBlocker.getVideoMimeType(normalizedUrl)
+                val finalMimeType = mimeTypeFromUrl ?: contentType
+                Log.i("WebViewDebug", "🎬 NEW Video detected - old : $normalizedUrl")
+                Log.i(
+                    "WebViewDebug",
+                    "🎬 NEW Video detected - new: $normalizedUrl (mime=$finalMimeType, cl=$contentLength)"
+                )
                 view?.post {
-                    callbacks.onVideoUrlDetected(normalizedUrl, contentType, contentLength)
+                    callbacks.onVideoUrlDetected(normalizedUrl, finalMimeType, contentLength)
                 }
             } else {
                 Log.d("WebViewDebug", "🔁 DUPLICATE ignored: $normalizedUrl")

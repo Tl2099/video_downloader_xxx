@@ -86,7 +86,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 .onEach {
                     val sheet = DownloadUrlVideoBottomSheet.newInstance(
                         onDownload = {
-                            val outFile = FileHelper.createVideoFile(requireContext())
+                            val outFile = FileHelper.createVideoFile(requireContext(), it.videoUrl ?: "")
                             downloadViewModel.downloadVideo(it, outFile)
                         },
                         onClose = {
@@ -140,7 +140,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         binding?.run {
 
             if (BuildConfig.DEBUG) {
-                edtUrl.setText("xem phim")
+                edtUrl.setText("mixkit")
                 btnSearch.isSelected = true
             }
         }

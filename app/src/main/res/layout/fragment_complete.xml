@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:gravity="center"
     android:background="@color/powder_blue"
+    android:gravity="center"
     android:orientation="vertical">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -23,8 +23,24 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imgEmpty"
         android:layout_width="wrap_content"
-        android:visibility="gone"
         android:layout_height="wrap_content"
         android:scaleType="centerCrop"
+        android:visibility="gone"
         app:srcCompat="@drawable/complete_img_1" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDeleteAll"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_browser_text_how_to_download"
+        android:gravity="center"
+        android:text="Delete All"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:translationZ="4dp"
+        app:backgroundTint="@null"
+        app:iconGravity="textStart"
+        app:iconTint="@color/white"/>
 </LinearLayout>

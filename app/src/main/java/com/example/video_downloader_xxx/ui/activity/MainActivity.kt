@@ -1,4 +1,4 @@
-package com.example.video_downloader_xxx
+package com.example.video_downloader_xxx.ui.activity
 
 import android.annotation.SuppressLint
 import android.view.View
@@ -7,6 +7,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.ActivityMainBinding
 import com.example.video_downloader_xxx.ui.base.BaseActivity
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel

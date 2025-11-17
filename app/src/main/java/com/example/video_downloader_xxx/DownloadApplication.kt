@@ -2,13 +2,16 @@ package com.example.video_downloader_xxx
 
 import android.app.Application
 import com.example.video_downloader_xxx.di.appModules
+import com.example.video_downloader_xxx.di.databaseModule
+import com.example.video_downloader_xxx.di.repositoryModule
+import com.example.video_downloader_xxx.di.viewModelModule
 import com.yausername.aria2c.Aria2c
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
-class DownloadApplication : Application()  {
+class DownloadApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
@@ -16,7 +19,12 @@ class DownloadApplication : Application()  {
         //Khởi tạo Koin
         startKoin {
             androidContext(this@DownloadApplication)
-            modules(appModules)
+            modules(
+                appModules,
+                databaseModule,
+                viewModelModule,
+                repositoryModule,
+            )
         }
 
         //Khởi tạo yt-dlp
@@ -24,7 +32,7 @@ class DownloadApplication : Application()  {
             YoutubeDL.getInstance().init(this);
             FFmpeg.getInstance().init(this);
             Aria2c.getInstance().init(this);
-        }catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
