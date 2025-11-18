@@ -10,6 +10,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -84,6 +85,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             delay(100)
             downloadViewModel.onFindVideoDone
                 .onEach {
+                    binding?.apply {
+                        btnSearch.text = "Convert"
+                        loadingAnim.isVisible = false
+                        loadingAnim.cancelAnimation()
+                    }
                     val sheet = DownloadUrlVideoBottomSheet.newInstance(
                         onDownload = {
                             val outFile = FileHelper.createVideoFile(requireContext(), it.videoUrl ?: "")
@@ -157,8 +163,10 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             }
 
             if (text.isValidUrl()) {
+                Log.i(TAG, "btn url: $text")
                 downloadViaUrl(text)
             } else {
+                Log.i(TAG, "btn search: $text")
                 downloadViaSearch(text)
             }
 
@@ -230,6 +238,12 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
                     is DownloadState.Error -> {
                         Log.i("BrowserHomeFragment_ttdat", "DownloadState Error ")
+                        binding?.apply {
+                            btnSearch.text = "Convert"
+                            loadingAnim.cancelAnimation()
+                            loadingAnim.isVisible = false
+                        }
+                        Log.i(TAG, "DownloadState.Error: ${st.message}")
                         binding?.txtStatus?.text = "Error: ${st.message}"
                     }
                 }
@@ -267,12 +281,18 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     override fun onDestroyView() {
         super.onDestroyView()
         clipboardManager.removePrimaryClipChangedListener(clipListener)
+        binding?.loadingAnim?.cancelAnimation()
     }
 
     override fun reloadAds() {
     }
 
     private fun startDownload(url: String) {
+        binding?.apply {
+            btnSearch.text = "Analyzing..."
+            loadingAnim.playAnimation()
+            loadingAnim.isVisible = true
+        }
         downloadViewModel.fetchVideoInfo(url)
     }
 
@@ -304,5 +324,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         }
         requestPermissionLauncher.launch(permissions)
     }
+
+    override fun onPause() {
+        super.onPause()
+        binding?.loadingAnim?.cancelAnimation()
+    }
+
 
 }

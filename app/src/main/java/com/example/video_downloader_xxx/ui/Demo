@@ -1,0 +1,116 @@
+[1 tool called]
+
+Bạn có thể xử lý “phân tích video quá lâu hoặc thất bại” mà không sửa trực tiếp code theo các bước sau:
+
+- **Giới hạn thời gian trong ViewModel**
+  - Mở `SharedViewModel.fetchVideoInfo(url)` (file `ui/fragment/browser/SharedViewModel.kt`).
+  - Bao bọc đoạn gọi API/logic phân tích trong `withTimeout(timeoutMillis) { ... }`. Khi timeout ném `TimeoutCancellationException`, catch rồi `emit` về luồng trạng thái (ví dụ một `sealed class AnalyzeState` hoặc dùng luôn `DownloadState.Error` với message `"Timeout"`).
+  - Nếu `fetchVideoInfo` hiện chạy trên `viewModelScope.launch`, nhớ giữ `Job` để có thể hủy từ nơi khác (xem bước tiếp).
+
+- **Theo dõi & hủy trong Fragment** (`BrowserHomeFragment`):
+  - Khi `startDownload(url)` được gọi, lưu `analyzeTimeoutJob` = `viewLifecycleOwner.lifecycleScope.launch { delay(TIMEOUT); downloadViewModel.cancelFetch(); showTimeoutUI() }`.
+  - Khi `downloadViewModel.onFindVideoDone` bắn dữ liệu thành công hoặc báo lỗi, hãy gọi `analyzeTimeoutJob?.cancel()` rồi cập nhật UI (ẩn loading, đổi `btnSearch` về “Convert”).
+  - Với lỗi do timeout, hiển thị `Toast.makeText(..., "Phân tích quá lâu, vui lòng thử lại", ...)` và gọi `downloadViewModel.clearDetectedVideos()` nếu cần.
+
+- **Cho phép ViewModel bị hủy từ Fragment**
+  - Trong `SharedViewModel`, giữ `private var fetchJob: Job?`.
+  - `fetchVideoInfo(url)` nên bắt đầu bằng `fetchJob?.cancel()` rồi `fetchJob = viewModelScope.launch { ... }`.
+  - Tạo hàm `cancelFetch()` để Fragment gọi khi hết thời gian.
+
+- **UI feedback**
+  - Khi bắt đầu phân tích (như hiện tại đang set `btnSearch.text = "Analyzing..."`), cũng lưu thời điểm bắt đầu (để debug/log).
+  - Khi timeout, ngoài Toast bạn có thể set `binding.txtStatus.text = "Analyze timeout"` và tắt animation (`loadingAnim.cancelAnimation()`).
+
+- **Test nhanh**
+  - Mock một URL cố tình khiến phân tích treo (hoặc chặn mạng) rồi đảm bảo sau ~10s UI quay về trạng thái idle và có thông báo timeout.
+  - Kiểm tra lại luồng bình thường (thành công và lỗi khác) xem `analyzeTimeoutJob` có bị hủy đúng không để tránh memory leak.
+
+Thực hiện theo hướng trên sẽ đảm bảo khi phân tích quá lâu hệ thống tự dừng và báo người dùng, còn những phân tích nhanh vẫn hoạt động bình thường.
+
+
+Dưới đây là gợi ý chi tiết (code mẫu) để bạn tự chỉnh:
+
+---
+
+### 1. Trong `SharedViewModel`
+
+```kotlin
+private var fetchJob: Job? = null
+
+fun fetchVideoInfo(url: String, timeoutMs: Long = 10_000L) {
+    fetchJob?.cancel()
+    fetchJob = viewModelScope.launch {
+        try {
+            withTimeout(timeoutMs) {
+                // logic phân tích video hiện tại
+                val result = repository.detectVideo(url)
+                _onFindVideoDone.emit(result)
+            }
+        } catch (ex: TimeoutCancellationException) {
+            _downloadVideoState.emit(
+                DownloadState.Error("Analyze timeout, please retry")
+            )
+        } catch (ex: Exception) {
+            _downloadVideoState.emit(DownloadState.Error(ex.message ?: "Unknown error"))
+        } finally {
+            fetchJob = null
+        }
+    }
+}
+
+fun cancelFetch() {
+    fetchJob?.cancel()
+    fetchJob = null
+}
+```
+
+### 2. Trong `BrowserHomeFragment`
+
+```kotlin
+private var analyzeTimeoutJob: Job? = null
+private val analyzeTimeoutMs = 10_000L
+
+private fun startDownload(url: String) {
+    binding?.apply {
+        btnSearch.text = "Analyzing..."
+        loadingAnim.playAnimation()
+        loadingAnim.isVisible = true
+    }
+
+    downloadViewModel.fetchVideoInfo(url)
+
+    analyzeTimeoutJob?.cancel()
+    analyzeTimeoutJob = viewLifecycleOwner.lifecycleScope.launch {
+        delay(analyzeTimeoutMs)
+        downloadViewModel.cancelFetch()
+        showAnalyzeTimeout()
+    }
+}
+
+private fun showAnalyzeTimeout() {
+    binding?.apply {
+        btnSearch.text = "Convert"
+        loadingAnim.cancelAnimation()
+        loadingAnim.isVisible = false
+        txtStatus.text = "Analyze timeout"
+    }
+    Toast.makeText(requireContext(), "Phân tích quá lâu, vui lòng thử lại", Toast.LENGTH_SHORT).show()
+}
+```
+
+### 3. Huỷ countdown khi nhận kết quả
+
+Trong observer `downloadViewModel.onFindVideoDone` và cả khi `DownloadState.Error`, nhớ:
+
+```kotlin
+analyzeTimeoutJob?.cancel()
+binding?.apply {
+    btnSearch.text = "Convert"
+    loadingAnim.cancelAnimation()
+    loadingAnim.isVisible = false
+}
+```
+
+---
+
+Bạn chỉ cần copy các đoạn trên vào file tương ứng và chỉnh theo kiến trúc hiện tại (tên biến, state…).

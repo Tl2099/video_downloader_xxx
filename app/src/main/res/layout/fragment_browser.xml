@@ -1,205 +1,223 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_grayish_blue"
-    android:orientation="vertical">
+    android:layout_width="match_parent">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/white"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:layout_height="match_parent"
+        android:background="@color/light_grayish_blue"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/white"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvHome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/txt_video_download"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/btnMore"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:padding="6dp"
+                app:srcCompat="@drawable/ic_setting" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:background="@drawable/shadow_bottom" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/searchFormContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/bg_search"
+            android:paddingVertical="16dp">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/icLink"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="16dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_url" />
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/edtUrl"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:background="@null"
+                android:hint="@string/txt_search_or_type_url"
+                android:imeOptions="actionDone"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:textColor="@color/black"
+                android:textColorHint="@color/txt_search_hint"
+                android:textCursorDrawable="@drawable/edittext_cursor_black"
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="@id/icLink"
+                app:layout_constraintEnd_toStartOf="@id/icPaste"
+                app:layout_constraintStart_toEndOf="@id/icLink"
+                app:layout_constraintTop_toTopOf="@id/icLink" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/icPaste"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/bg_selector_paste"
+                android:paddingStart="9dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="4dp"
+                android:paddingBottom="7dp"
+                app:layout_constraintBottom_toBottomOf="@id/icLink"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/icLink"
+                app:srcCompat="@drawable/ic_paste" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Button
+            android:id="@+id/btnSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:background="@drawable/bg_btn_search"
+            android:padding="0dp"
+            android:text="@string/txt_convert"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            app:backgroundTint="@null" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvHome"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/txt_video_download"
+            android:layout_marginTop="24dp"
+            android:paddingHorizontal="16dp"
+            android:text="@string/txt_download_videos_from"
             android:textColor="@color/black"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
-        <Space
-            android:layout_width="0dp"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycleViewListSocialMedia"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_browser_recycle"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:overScrollMode="never"
+            android:paddingHorizontal="18dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="10dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_social_web" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/btnMore"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:padding="6dp"
-            app:srcCompat="@drawable/ic_setting" />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:paddingHorizontal="16dp"
+            android:text="@string/txt_recently_used_website"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycleViewListRecentlyWeb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_browser_recycle"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:overScrollMode="never"
+            android:paddingHorizontal="18dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="10dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_social_web" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnHowToDownload"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_browser_text_how_to_download"
+            android:gravity="center"
+            android:text="@string/txt_how_to_download"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:translationZ="4dp"
+            app:backgroundTint="@null"
+            app:icon="@drawable/ic_browser_how_to_down"
+            app:iconGravity="textStart"
+            app:iconTint="@color/white" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="12dp"
+            android:layout_marginTop="50dp"
+            app:layout_constraintBottom_toTopOf="@id/txtStatus"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnSearch" />
+
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="Idle"
+            android:textColor="@color/black"
+            app:layout_constraintEnd_toEndOf="@id/progressBar"
+            app:layout_constraintStart_toStartOf="@id/progressBar"
+            app:layout_constraintTop_toBottomOf="@id/progressBar" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <View
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/loadingAnim"
         android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:background="@drawable/shadow_bottom" />
+        android:layout_height="match_parent"
+        android:layout_marginTop="0dp"
+        android:padding="130dp"
+        android:visibility="gone"
+        app:lottie_autoPlay="true"
+        android:background="@color/gray_overlay"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/loading" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/searchFormContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="22dp"
-        android:background="@drawable/bg_search"
-        android:paddingVertical="16dp">
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icLink"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="16dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_url" />
-
-        <com.google.android.material.textfield.MaterialAutoCompleteTextView
-            android:id="@+id/edtUrl"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:background="@null"
-            android:hint="@string/txt_search_or_type_url"
-            android:imeOptions="actionDone"
-            android:inputType="textUri"
-            android:singleLine="true"
-            android:textColor="@color/black"
-            android:textColorHint="@color/txt_search_hint"
-            android:textCursorDrawable="@drawable/edittext_cursor_black"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@id/icLink"
-            app:layout_constraintEnd_toStartOf="@id/icPaste"
-            app:layout_constraintStart_toEndOf="@id/icLink"
-            app:layout_constraintTop_toTopOf="@id/icLink" />
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icPaste"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/bg_selector_paste"
-            android:paddingStart="9dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="4dp"
-            android:paddingBottom="7dp"
-            app:layout_constraintBottom_toBottomOf="@id/icLink"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/icLink"
-            app:srcCompat="@drawable/ic_paste" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <Button
-        android:id="@+id/btnSearch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:background="@drawable/bg_btn_search"
-        android:padding="0dp"
-        android:text="@string/txt_convert"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        app:backgroundTint="@null" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:paddingHorizontal="16dp"
-        android:text="@string/txt_download_videos_from"
-        android:textColor="@color/black"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycleViewListSocialMedia"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/bg_browser_recycle"
-        android:clipToPadding="false"
-        android:orientation="horizontal"
-        android:overScrollMode="never"
-        android:paddingHorizontal="18dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="10dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/item_social_web" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:paddingHorizontal="16dp"
-        android:text="@string/txt_recently_used_website"
-        android:textColor="@color/black"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycleViewListRecentlyWeb"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/bg_browser_recycle"
-        android:clipToPadding="false"
-        android:orientation="horizontal"
-        android:overScrollMode="never"
-        android:paddingHorizontal="18dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="10dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/item_social_web" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnHowToDownload"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/bg_browser_text_how_to_download"
-        android:gravity="center"
-        android:text="@string/txt_how_to_download"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        android:translationZ="4dp"
-        app:backgroundTint="@null"
-        app:icon="@drawable/ic_browser_how_to_down"
-        app:iconGravity="textStart"
-        app:iconTint="@color/white" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="12dp"
-        android:layout_marginTop="50dp"
-        app:layout_constraintBottom_toTopOf="@id/txtStatus"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnSearch" />
-
-    <TextView
-        android:id="@+id/txtStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:text="Idle"
-        android:textColor="@color/black"
-        app:layout_constraintEnd_toEndOf="@id/progressBar"
-        app:layout_constraintStart_toStartOf="@id/progressBar"
-        app:layout_constraintTop_toBottomOf="@id/progressBar" />
-
-</androidx.appcompat.widget.LinearLayoutCompat>
+</FrameLayout>

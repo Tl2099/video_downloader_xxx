@@ -66,6 +66,9 @@ android {
 
 dependencies {
 
+    //lottie
+    implementation("com.airbnb.android:lottie:6.6.7")
+
     //RoomDatabase
     implementation("androidx.room:room-runtime:2.8.3")
     kapt("androidx.room:room-compiler:2.8.3")
