@@ -34,6 +34,14 @@ fun ImageView.glideLoad(url: Any, placeholder: Int) {
         .waitForLayout()
 }
 
+fun ImageView.glideLoadUseCache(url: Any, placeholder: Int) {
+    Glide.with(this)
+        .load(url)
+        .placeholder(placeholder)
+        .into(this)
+        .waitForLayout()
+}
+
 fun ImageView.glideLoadCallback(url: Any, callback: () -> Unit) {
     Glide.with(this)
         .asBitmap()

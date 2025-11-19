@@ -8,6 +8,7 @@ import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.ItemVideoProgressBinding
 import com.example.video_downloader_xxx.util.glideLoad
+import com.example.video_downloader_xxx.util.glideLoadUseCache
 
 class VideoLoadingAdapter() : RecyclerView.Adapter<VideoLoadingAdapter.ViewHolder>() {
     private val video: MutableList<VideoInfo> = mutableListOf()
@@ -15,14 +16,14 @@ class VideoLoadingAdapter() : RecyclerView.Adapter<VideoLoadingAdapter.ViewHolde
 
     inner class ViewHolder(private val binding: ItemVideoProgressBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        @SuppressLint("SetTextI18n")
         fun bind(item: VideoInfo) {
             with(binding) {
-                imgThumbnail.glideLoad(imgThumbnail, R.drawable.video_placeholder)
+                imgThumbnail.glideLoadUseCache(item.videoUrl?:"", R.drawable.video_placeholder)
                 tvTitle.text = item.title
                 progressBar.setProgress(item.progress.toInt(), true)
-                tvTime.text = item.fileSize
                 tvTime.text = item.duration
-
+                tvPercent.text = "${item.progress}% / 100%"
                 btnClose.setOnClickListener {
                     onCloseClick.invoke(item)
                 }

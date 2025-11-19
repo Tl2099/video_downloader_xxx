@@ -3,6 +3,7 @@ package com.example.video_downloader_xxx.ui.fragment.browser.home
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.util.Log
@@ -13,10 +14,13 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.example.video_downloader_xxx.R
+import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.BottomSheetLayoutBinding
+import com.example.video_downloader_xxx.ui.activity.PlayerActivity
 import com.example.video_downloader_xxx.ui.fragment.browser.DownloadUrlVideoAdapter
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import com.example.video_downloader_xxx.ui.fragment.library.complete.CompleteFragment.Companion.TAG
 import com.example.video_downloader_xxx.util.TextHelper
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -84,6 +88,7 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
 
     private fun setupRecyclerView() {
         binding.recycleViewListVideoDownload.adapter = adapter
+        binding.recycleViewListVideoDownload.itemAnimator = null
 
         val currentVideos = downloadViewModel.videoList.value
         if (currentVideos.isNotEmpty()) {
@@ -95,7 +100,7 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
             .filterNotNull()
             .onEach { it ->
                 Log.i(TAG, "setupRecyclerView: called")
-                for(i in it){
+                for (i in it) {
                     Log.i(TAG, "setupRecyclerView: ${i.videoUrl}")
                 }
                 adapter.addData(it)
@@ -104,6 +109,12 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
         adapter.onToggleSelect = { downloadViewModel.toggleSelect(it) }
         adapter.onRenameClick = {
             showRenameDialog(it)
+        }
+        adapter.onClick = { video ->
+            video.videoUrl?.let { path ->
+                DataExt.pathVideoUrl = path
+                startActivity(Intent(requireContext(), PlayerActivity::class.java))
+            }
         }
     }
 

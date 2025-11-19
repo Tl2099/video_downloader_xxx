@@ -1,4 +1,4 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.web
+package com.example.video_downloader_xxx.ui.fragment.library.complete
 
 import android.app.AlertDialog
 import android.app.Dialog
@@ -18,9 +18,11 @@ import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.DataExt.listVideoInfo
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.BottomSheetLayoutBinding
+import com.example.video_downloader_xxx.databinding.CompleteBottomSheetLayoutBinding
 import com.example.video_downloader_xxx.ui.activity.PlayerActivity
 import com.example.video_downloader_xxx.ui.fragment.browser.DownloadUrlVideoAdapter
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
 import com.example.video_downloader_xxx.util.TextHelper
 import com.example.video_downloader_xxx.util.TextHelper.extractExtension
 import com.example.video_downloader_xxx.util.TextHelper.sanitizeFileName
@@ -37,15 +39,15 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import kotlin.math.log
 
-class DownloadVideoWebBottomSheet() : BottomSheetDialogFragment() {
-    private var _binding: BottomSheetLayoutBinding? = null
+class CompleteBottomSheet() : BottomSheetDialogFragment() {
+    private var _binding: CompleteBottomSheetLayoutBinding? = null
     private val binding get() = _binding!!
 
-    private val adapter: DownloadUrlVideoAdapter by lazy { DownloadUrlVideoAdapter() }
-    private val downloadViewModel: SharedViewModel by activityViewModel()
+    private var onShare: ((VideoInfo) -> Unit)? = null
+    private var onRename: ((VideoInfo) -> Unit)? = null
+    private var onDelete: ((VideoInfo) -> Unit)? = null
 
-    private var onDownload: ((VideoInfo) -> Unit)? = null
-    private var onClose: (() -> Unit)? = null
+    private var currentVideo: VideoInfo? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = BottomSheetDialog(requireContext(), theme)
@@ -74,80 +76,53 @@ class DownloadVideoWebBottomSheet() : BottomSheetDialogFragment() {
         }
     }
 
+    fun setVideo(video: VideoInfo) {
+        currentVideo = video
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = BottomSheetLayoutBinding.inflate(inflater, container, false)
+        _binding = CompleteBottomSheetLayoutBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d(TAG, "Current video list size: ${downloadViewModel.videoList.value.size}")
         setupRecyclerView()
         setupDownloadButton()
     }
 
     private fun setupRecyclerView() {
-        binding.recycleViewListVideoDownload.adapter = adapter
-        binding.recycleViewListVideoDownload.itemAnimator = null
 
-        val currentVideos = downloadViewModel.videoWebList.value
-        if (currentVideos.isNotEmpty()) {
-            Log.d(TAG, "Setting initial data: ${currentVideos.size} videos")
-            adapter.addData(currentVideos)
-        }
-
-        downloadViewModel.videoWebList
-            .filterNotNull()
-            .onEach { it ->
-                Log.i(TAG, "setupRecyclerView: called")
-                for(i in it){
-                    Log.i(TAG, "setupRecyclerView: ${i.videoUrl}")
-                }
-                adapter.addData(it)
-            }.launchIn(lifecycleScope)
-
-        adapter.onToggleSelect = { downloadViewModel.toggleVideoSelect(it) }
-        adapter.onRenameClick = {
-            showRenameDialog(it)
-        }
-        adapter.onClick = { video ->
-            video.videoUrl?.let { path ->
-                DataExt.pathVideoUrl = path
-                startActivity(Intent(requireContext(), PlayerActivity::class.java))
-            }
-        }
     }
 
     private fun setupDownloadButton() {
-        binding.btnDownload.setOnClickListener {
-            Log.e("forEachIndexed", "index: "+DataExt.listUrl )
+        binding.tvTitle.text = currentVideo?.title
 
-            var abc = DataExt.listUrl[DataExt.indexPos]
-            //
-            val listVideoSelected = downloadViewModel.getSelectedWebVideos()
-            Log.i(TAG, "setupDownloadButton: ${listVideoSelected.size}")
-            if (listVideoSelected.isEmpty()) {
-                Toast.makeText(requireContext(), "Chưa chọn video nào", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else {
-                listVideoInfo.addAll(listVideoSelected)
-                Log.i(TAG, "listVideoInfo: ${listVideoInfo.size}")
-                listVideoSelected.forEach {
-                    Log.i(TAG, "setupDownloadButton: ${it.videoUrl}")
-                    onDownload?.invoke(it)
-                }
+        binding.btnShare.setOnClickListener {
+            currentVideo?.let { video ->
+                onShare?.invoke(video)
+                dismissAllowingStateLoss()
             }
-            dismissAllowingStateLoss()
         }
-        binding.btnClose.setOnClickListener {
-            Log.d("BottomSheet", "Close clicked")
-            onClose?.invoke()
-            dismissAllowingStateLoss()
+
+        binding.btnRename.setOnClickListener {
+            currentVideo?.let { video ->
+                onRename?.invoke(video)
+                dismissAllowingStateLoss()
+            }
         }
+
+        binding.btnDelete.setOnClickListener {
+            currentVideo?.let { video ->
+                onDelete?.invoke(video)
+                dismissAllowingStateLoss()
+            }
+        }
+
     }
 
     override fun onDestroyView() {
@@ -201,7 +176,7 @@ class DownloadVideoWebBottomSheet() : BottomSheetDialogFragment() {
                 val clean = sanitizeFileName(raw.removeSuffix(".$ext"))
                 val finalName = if (ext.isNotEmpty()) "$clean.$ext" else clean
 
-                downloadViewModel.renameVideoWeb(video, finalName)
+                //downloadViewModel.renameVideoWeb(video, finalName)
 
                 dialog.dismiss()
             }
@@ -215,23 +190,14 @@ class DownloadVideoWebBottomSheet() : BottomSheetDialogFragment() {
         const val TAG = "DownloadUrlVideoBottomSheet"
 
         fun newInstance(
-            onDownload: (VideoInfo) -> Unit,
-            onClose: (() -> Unit)? = null
-        ): DownloadVideoWebBottomSheet {
-            return DownloadVideoWebBottomSheet().apply {
-                this.onDownload = onDownload
-                this.onClose = onClose
-            }
-        }
-
-        fun newInstance(
-            videos: MutableList<VideoInfo>,
-            onDownload: (VideoInfo) -> Unit,
-            onClose: (() -> Unit)? = null
-        ): DownloadVideoWebBottomSheet {
-            return DownloadVideoWebBottomSheet().apply {
-                this.onDownload = onDownload
-                this.onClose = onClose
+            onShare: (VideoInfo) -> Unit,
+            onRename: (VideoInfo) -> Unit,
+            onDelete: (VideoInfo) -> Unit,
+        ): CompleteBottomSheet {
+            return CompleteBottomSheet().apply {
+                this.onShare = onShare
+                this.onRename = onRename
+                this.onDelete = onDelete
             }
         }
     }

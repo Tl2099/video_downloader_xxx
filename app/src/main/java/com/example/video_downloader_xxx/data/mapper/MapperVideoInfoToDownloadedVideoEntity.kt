@@ -12,6 +12,7 @@ fun VideoInfo.toEntity(): DownloadedVideoEntity {
         sourceUrl = this.sourceUrl,
         filePath = this.localPath ?: "",
         fileSize = this.fileSize,
+        duration = this.duration,
         thumbnailUrl = this.thumbnailUrl
     )
 }
@@ -24,6 +25,7 @@ fun DownloadedVideoEntity.toVideoInfo(): VideoInfo {
         sourceUrl = this.sourceUrl ?: "",
         thumbnailUrl = this.thumbnailUrl,
         fileSize = this.fileSize,
+        duration = this.duration,
         localPath = this.filePath,
         downloadStatus = DownloadStatus.SUCCESS
     )

@@ -11,6 +11,8 @@ import com.example.video_downloader_xxx.databinding.FragmentCompleteBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.activity.PlayerActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
+import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserHomeFragment
+import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
@@ -34,6 +36,7 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
                     Log.i(TAG, "Title: ${i.title}")
                     Log.i(TAG, "ID: ${i.id}")
                     Log.i(TAG, "VideoURL: ${i.videoUrl}")
+                    Log.i(TAG, "Duration: ${i.duration}")
                     Log.i(TAG, "SourceURL: ${i.sourceUrl}")
                     Log.i(TAG, "Active jobs: ${i.fileSize}")
                     Log.i(TAG, "localPath:${i.localPath}")
@@ -44,24 +47,32 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
 
     override fun initListener() {
         adapter.onItemClick = { video ->
-            Log.i(TAG, "initListener: ${video.localPath} ${DataExt.path}")
-            video.localPath?.let { path ->
-                DataExt.path = path
-                Log.i(TAG, "initListener: $path ${DataExt.path}")
-                startActivity(Intent(requireContext(), PlayerActivity::class.java))
-
-//                if (listUrl.size == 1){
-//                    startActivity(Intent(requireContext(), PlayerActivity::class.java))
-//                }else{
-//                    //Check Size  list
-//                    indexPos++
-//                    if(indexPos <= listUrl.size){
-//                        listUrl[indexPos]
-//                    }else{
-//                        indexPos = 0
-//                    }
-//                }
+            Log.i(TAG, "initListener: ${video.localPath} ${DataExt.pathVideoUrl}")
+            video.videoUrl?.let { path ->
+                DataExt.pathVideoUrl = path
+                Log.i(TAG, "initListener: $path ${DataExt.pathVideoUrl}")
             }
+            video.localPath?.let { path ->
+                DataExt.pathLocalVideo = path
+                Log.i(TAG, "initListener: $path ${DataExt.pathLocalVideo}")
+            }
+            startActivity(Intent(requireContext(), PlayerActivity::class.java))
+        }
+
+        adapter.onMoreClick = { video ->
+            val sheet = CompleteBottomSheet.newInstance(
+                onShare = {
+
+                },
+                onRename = {
+
+                },
+                onDelete = {
+
+                }
+            )
+            sheet.setVideo(video)
+            sheet.show(parentFragmentManager, "DownloadSheet")
         }
 
         binding?.btnDeleteAll?.setOnClickListener {

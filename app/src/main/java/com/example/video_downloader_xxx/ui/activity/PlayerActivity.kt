@@ -1,35 +1,79 @@
 package com.example.video_downloader_xxx.ui.activity
 
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.databinding.ActivityPlayerBinding
 import com.example.video_downloader_xxx.ui.base.BaseActivity
+import com.example.video_downloader_xxx.util.isNetworkAvailable
 import java.io.File
+import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.media3.common.util.UnstableApi
 
 class PlayerActivity : BaseActivity<ActivityPlayerBinding>() {
     private lateinit var player: ExoPlayer
 
+    @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("PlayerActivity", "onCreate: ")
 
-        //val uriVideo = Uri.parse("android.resource://${packageName}/${DataExt.path}")
-        val path = DataExt.path
-        val uriVideo = Uri.fromFile(File(path))
+        val pathVideoUrl = DataExt.pathVideoUrl
+        val pathLocalVideo = DataExt.pathLocalVideo
 
-        Log.d("PlayerActivity", ""+uriVideo )
+        val isOnline = isNetworkAvailable()
+
+        val uri = if (isOnline) {
+            Log.i("PlayerActivity", "Online")
+            pathVideoUrl.toUri()
+        } else {
+            Log.i("PlayerActivity", "Offline")
+            Uri.fromFile(File(pathLocalVideo))
+        }
         player = ExoPlayer.Builder(this).build()
-
         binding.playerView.player = player
-
-        player.setMediaItem(MediaItem.fromUri(uriVideo))
+        binding.playerView.controllerAutoShow = true
+        binding.playerView.controllerHideOnTouch = true
+        binding.playerView.showController()
+        player.setMediaItem(MediaItem.fromUri(uri))
         player.prepare()
         player.play()
     }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            hideSystemUI()
+        } else {
+            showSystemUI()
+        }
+    }
+
+    private fun hideSystemUI() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, binding.root).apply {
+            hide(WindowInsetsCompat.Type.systemBars())
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+
+    private fun showSystemUI() {
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowInsetsControllerCompat(window, binding.root).show(WindowInsetsCompat.Type.systemBars())
+    }
+
+
 
     override fun initView() {
     }
@@ -48,6 +92,8 @@ class PlayerActivity : BaseActivity<ActivityPlayerBinding>() {
 
     override fun onDestroy() {
         super.onDestroy()
-        player.release()
+        if (::player.isInitialized) {
+            player.release()
+        }
     }
 }

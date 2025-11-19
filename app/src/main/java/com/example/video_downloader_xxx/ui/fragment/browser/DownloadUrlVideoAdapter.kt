@@ -9,11 +9,13 @@ import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.ItemVideoBinding
 import com.example.video_downloader_xxx.util.glideLoad
+import com.example.video_downloader_xxx.util.glideLoadUseCache
 
 class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.ViewHolder>() {
 
     private val video: MutableList<VideoInfo> = mutableListOf()
     var onRenameClick: (VideoInfo) -> Unit = {}
+    var onClick: (VideoInfo) -> Unit = {}
     var onToggleSelect: ((VideoInfo) -> Unit)? = null
 
     inner class ViewHolder(private val binding: ItemVideoBinding) :
@@ -21,7 +23,7 @@ class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.V
         fun bind(item: VideoInfo) {
 
             with(binding) {
-                imgThumbnail.glideLoad(imgThumbnail, R.drawable.video_placeholder)
+                imgThumbnail.glideLoadUseCache(item.videoUrl?:"", R.drawable.video_placeholder)
                 tvTitle.text = item.title
                 tvFileSize.text = item.fileSize
                 tvTime.text = item.duration
@@ -30,7 +32,9 @@ class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.V
                 checkbox.isChecked = item.isSelected
                 root.isSelected = item.isSelected
 
-
+                imgThumbnail.setOnClickListener {
+                    onClick.invoke(item)
+                }
 
                 root.setOnClickListener {
                     onToggleSelect?.invoke(item)

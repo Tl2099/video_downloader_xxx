@@ -1,5 +1,6 @@
 package com.example.video_downloader_xxx.data.repository.browser
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.util.Log
 import com.example.video_downloader_xxx.data.model.VideoInfo
@@ -56,19 +57,16 @@ class VideoDownloadManager {
                 if (line.isBlank()) continue
                 val json = JSONObject(line)
 
-                var durationText = json.optInt("duration", -1).takeIf { it > 0 }?.let { sec ->
-                    val min = sec / 60
-                    val s = sec % 60
-                    "%02d:%02d".format(min, s)
-                } ?: json.optString("duration_string", null)
-                if (durationText == null) {
+                var durationText = formatDuration(json.optInt("duration", -1))
+
+                if (durationText == "00:00:00") {
                     val url = json.optString("url", null)
                     if (!url.isNullOrEmpty()) {
                         durationText = fetchVideoDuration(url)
                     }
                 }
 
-                val fileSizeText = getFileSizeOrFetch(json)
+                val fileSizeText = getFileSizeOrFetch(json) ?: "Unknown"
 
                 var thumbnailUrl = json.optString("thumbnail", null)
 //                if (thumbnailUrl.isNullOrEmpty()) {
@@ -105,39 +103,16 @@ class VideoDownloadManager {
     }
 
 
-    fun downloadVideo(
-        video: VideoInfo,
-        outputPath: File,
-        formatId: String? = null,
-    ): Flow<DownloadProgress> = channelFlow {
+    @SuppressLint("DefaultLocale")
+    private fun formatDuration(seconds: Int): String {
+        if (seconds <= 0) return "00:00:00"
 
-        val baseTitle = (video.title.trim().takeUnless { it.isEmpty() } ?: "video")
-            .replace(Regex("""[\\/:*?"<>|]"""), "_")
-        val uniqueTitle = ensureUniqueName(outputPath, baseTitle)
+        val h = seconds / 3600
+        val m = (seconds % 3600) / 60
+        val s = seconds % 60
 
-        val request = YoutubeDLRequest(video.sourceUrl).apply {
-            addOption("--extractor-args", "generic:impersonate=chrome101")
-            addOption("-o", File(outputPath, "$uniqueTitle.%(ext)s").absolutePath)
-            addOption("-f", formatId ?: "best")
-            addOption("--add-metadata")
-            addOption("--embed-thumbnail")
-            addOption("--continue")
-            addOption("--no-part")
-            addOption("--newline")
-            addOption("--no-playlist")
-        }
-
-        try {
-            YoutubeDL.getInstance().execute(request, "download") { progress, eta, line ->
-                trySend(DownloadProgress(progress, eta, line))
-            }
-
-            trySend(DownloadProgress(100f, 0, "Completed"))
-        } catch (e: Exception) {
-            trySend(DownloadProgress(-1f, 0, "Error: ${e.message}"))
-        }
-
-    }.flowOn(Dispatchers.IO)
+        return String.format("%02d:%02d:%02d", h, m, s)
+    }
 
     private fun ensureUniqueName(dir: File, baseName: String): String {
         var name = baseName
@@ -172,38 +147,128 @@ class VideoDownloadManager {
         }
 
 
-    private suspend fun fetchVideoDuration(videoUrl: String): String? =
+    private suspend fun fetchVideoDuration(videoUrl: String): String =
         withContext(Dispatchers.IO) {
             try {
                 val retriever = android.media.MediaMetadataRetriever()
                 retriever.setDataSource(videoUrl, HashMap())
-                val durationMs = retriever.extractMetadata(
-                    android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
-                )?.toLongOrNull() ?: return@withContext null
+                val durationMs = retriever
+                    .extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    ?.toLongOrNull()
+
                 retriever.release()
 
-                val totalSeconds = durationMs / 1000
-                val minutes = totalSeconds / 60
-                val seconds = totalSeconds % 60
-                "%02d:%02d".format(minutes, seconds)
+                if (durationMs != null && durationMs > 0) {
+                    val totalSeconds = (durationMs / 1000).toInt()
+                    return@withContext formatDuration(totalSeconds)
+                }
+
+                "00:00:00"
             } catch (e: Exception) {
                 Log.w(TAG, "fetchVideoDuration failed: ${e.message}")
-                null
+                "00:00:00"
             }
         }
 
-
     private suspend fun getFileSizeOrFetch(json: JSONObject): String? {
-        val fileSizeBytes = json.optLong("filesize_approx", -1)
-        if (fileSizeBytes > 0) {
-            return String.format("%.2f MB", fileSizeBytes / 1024f / 1024f)
+
+        getSizeFromFormats(json)?.let { size ->
+            return formatSize(size)
+        }
+
+        val approx = json.optLong("filesize_approx", -1)
+        if (approx > 0) {
+            return formatSize(approx)
         }
 
         val url = json.optString("url", null) ?: return null
-        return fetchFileSizeFromUrl(url)?.let {
-            String.format("%.2f MB", it / 1024f / 1024f)
+        if (url.endsWith(".m3u8")) {
+            val hlsSize = estimateHlsSize(url)
+            if (hlsSize != null && hlsSize > 0) {
+                return formatSize(hlsSize)
+            }
+        }
+
+        val headSize = fetchFileSizeFromUrl(url)
+        if (headSize != null && headSize > 0) {
+            return formatSize(headSize)
+        }
+
+        return "Unknown"
+    }
+
+
+    private fun formatSize(bytes: Long): String {
+        if (bytes <= 0) return "0 MB"
+
+        val mb = bytes / 1024f / 1024f
+
+        return if (mb < 1024) {
+            String.format("%.2f MB", mb)
+        } else {
+            val gb = mb / 1024f
+            String.format("%.2f GB", gb)
         }
     }
+
+
+    private fun getSizeFromFormats(json: JSONObject): Long? {
+        val formats = json.optJSONArray("formats") ?: return null
+
+        var bestSize: Long? = null
+
+        for (i in 0 until formats.length()) {
+            val f = formats.optJSONObject(i) ?: continue
+            val size = f.optLong("filesize", -1).takeIf { it > 0 }
+                ?: f.optLong("filesize_approx", -1).takeIf { it > 0 }
+
+            if (size != null) {
+                bestSize = size
+                break
+            }
+        }
+
+        return bestSize
+    }
+
+    private suspend fun estimateHlsSize(m3u8Url: String): Long? = withContext(Dispatchers.IO) {
+        try {
+            val url = java.net.URL(m3u8Url)
+            val base = m3u8Url.substringBeforeLast("/")
+
+            val text = url.readText()
+            val lines = text.lines()
+
+            val segments = mutableListOf<String>()
+
+            for (line in lines) {
+                val trimmed = line.trim()
+                if (trimmed.isEmpty()) continue
+                if (trimmed.startsWith("#")) continue
+
+                segments.add(trimmed)
+            }
+
+            if (segments.isEmpty()) {
+                Log.w(TAG, "estimateHlsSize: no segments found in $m3u8Url")
+                return@withContext null
+            }
+
+            var total: Long = 0
+
+            for (seg in segments) {
+                val segUrl = if (seg.startsWith("http")) seg else "$base/$seg"
+                val size = fetchFileSizeFromUrl(segUrl) ?: continue
+                total += size
+            }
+
+            total
+        } catch (e: Exception) {
+            Log.e(TAG, "estimateHlsSize error: ${e.message}")
+            null
+        }
+    }
+
 
     private suspend fun fetchFileSizeFromUrl(url: String): Long? = withContext(Dispatchers.IO) {
         try {
@@ -218,6 +283,40 @@ class VideoDownloadManager {
             null
         }
     }
+
+    fun downloadVideo(
+        video: VideoInfo,
+        outputPath: File,
+        formatId: String? = null,
+    ): Flow<DownloadProgress> = channelFlow {
+
+        val baseTitle = (video.title.trim().takeUnless { it.isEmpty() } ?: "video")
+            .replace(Regex("""[\\/:*?"<>|]"""), "_")
+        val uniqueTitle = ensureUniqueName(outputPath, baseTitle)
+
+        val request = YoutubeDLRequest(video.sourceUrl).apply {
+            addOption("--extractor-args", "generic:impersonate=chrome101")
+            addOption("-o", File(outputPath, "$uniqueTitle.%(ext)s").absolutePath)
+            addOption("-f", formatId ?: "best")
+            addOption("--add-metadata")
+            addOption("--embed-thumbnail")
+            addOption("--continue")
+            addOption("--no-part")
+            addOption("--newline")
+            addOption("--no-playlist")
+        }
+
+        try {
+            YoutubeDL.getInstance().execute(request, "download") { progress, eta, line ->
+                trySend(DownloadProgress(progress, eta, line))
+            }
+
+            trySend(DownloadProgress(100f, 0, "Completed"))
+        } catch (e: Exception) {
+            trySend(DownloadProgress(-1f, 0, "Error: ${e.message}"))
+        }
+
+    }.flowOn(Dispatchers.IO)
 
 }
 

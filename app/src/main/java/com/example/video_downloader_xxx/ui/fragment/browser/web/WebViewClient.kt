@@ -93,6 +93,7 @@ class WebViewClient(
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
+
         videoUrls.clear()
         normalizedVideoUrls.clear()
         hlsStreamIds.clear()

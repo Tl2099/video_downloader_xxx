@@ -16,8 +16,11 @@
     <string name="txt_video_download">Video Download</string>
     <string name="txt_search_or_type_url">Search or type url</string>
     <string name="txt_convert">Convert</string>
+    <string name="txt_analyzing">Analyzing...</string>
+    <string name="txt_analyzing_timeout">Analyze timeout</string>
     <string name="txt_download_videos_from">Download Videos From</string>
     <string name="txt_recently_used_website">Recently used website</string>
+    <string name="txt_status_analyzing">Analyzing please wait a moment</string>
 
     <!--Web Screen-->
     <string name="txt_cancel">cancel</string>
@@ -46,5 +49,13 @@
     <string name="how_to_download_btn_title_3">Click the <font color="#000000"><b>download button</b></font></string>
     <string name="btn_next">Next</string>
     <string name="btn_got_it">Got it</string>
+
+    <!--Invalid link screen-->
+    <string name="txt_invalid_link">Invalid link, please try again</string>
+    <string name="txt_so_sorry">So sorry</string>
+    <string name="txt_cancel_1">Cancel</string>
+    <string name="txt_agree">Agree</string>
+    <string name="txt_so_long_time">Analysis took too long, please try again.</string>
+    <string name="txt_fetch_fail">Failed to fetch video data. Check the link and try again.</string>
 
 </resources>

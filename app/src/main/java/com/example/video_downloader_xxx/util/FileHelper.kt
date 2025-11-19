@@ -3,6 +3,7 @@ package com.example.video_downloader_xxx.util
 import android.content.Context
 import android.os.Build
 import android.os.Environment
+import android.util.Patterns
 import android.webkit.MimeTypeMap
 import java.io.File
 
@@ -48,8 +49,12 @@ object FileHelper {
         return File(dir, fileName)
     }
 
+//    fun String.isValidUrl(): Boolean {
+//        val urlRegex = "^(https?://)?([\\w.-]+)\\.([a-z]{2,6})([/\\w .-]*)*/?$"
+//        return this.matches(urlRegex.toRegex())
+//    }
+
     fun String.isValidUrl(): Boolean {
-        val urlRegex = "^(https?://)?([\\w.-]+)\\.([a-z]{2,6})([/\\w .-]*)*/?$"
-        return this.matches(urlRegex.toRegex())
+        return Patterns.WEB_URL.matcher(this).matches()
     }
 }

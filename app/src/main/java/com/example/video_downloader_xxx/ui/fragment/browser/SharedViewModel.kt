@@ -9,6 +9,8 @@ import com.example.video_downloader_xxx.data.repository.browser.SocialRepository
 import com.example.video_downloader_xxx.data.repository.browser.VideoDownloadManager
 import com.example.video_downloader_xxx.data.repository.web.DownloadVideosOnWebRepository
 import com.example.video_downloader_xxx.util.DownloadState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.io.File
 
 class SharedViewModel(
@@ -41,6 +44,8 @@ class SharedViewModel(
 
     private val _onFindVideoDone = MutableSharedFlow<Unit>()
     val onFindVideoDone = _onFindVideoDone.asSharedFlow()
+
+    private var fetchJob: Job? = null
 
     init {
         loadSocials()
@@ -119,25 +124,40 @@ class SharedViewModel(
     }
 
     fun fetchVideoInfo(url: String) {
-        viewModelScope.launch {
+        fetchJob?.cancel()
+        fetchJob = viewModelScope.launch {
             try {
-                _videoList.update {
-                    manager.getVideoInfo(url).map { it.copy(isSelected = true) }
-                }
+                withTimeout(100000L) {
+                    _videoList.update {
+                        manager.getVideoInfo(url).map { it.copy(isSelected = true) }
+                    }
 
-                _videoDetected.value = repositoryDownload.getVideoInfo(url)
-                Log.i("SharedViewModel", "fetchVideoInfo: ${_videoDetected.value} ")
-                if (_videoList.value.isEmpty()) {
-                    _downloadVideoState.value = DownloadState.Error("Không thể phân tích video.")
-                    return@launch
+                    _videoDetected.value = repositoryDownload.getVideoInfo(url)
+                    Log.i("SharedViewModel", "fetchVideoInfo: ${_videoDetected.value} ")
+                    if (_videoList.value.isEmpty()) {
+                        _downloadVideoState.value =
+                            DownloadState.Error("Không thể phân tích video.")
+                        return@withTimeout
+                    }
+                    _onFindVideoDone.emit(Unit)
                 }
-                _onFindVideoDone.emit(Unit)
+            } catch (ex: TimeoutCancellationException) {
+                _downloadVideoState.emit(
+                    DownloadState.Error("Analyze timeout, please retry: ${ex.message}")
+                )
             } catch (e: Exception) {
                 Log.e("DownloadViewModel", "Error fetching video info: ${e.message}", e)
                 _downloadVideoState.value =
                     DownloadState.Error("Error fetching video info: ${e.message}")
+            } finally {
+                fetchJob = null
             }
         }
+    }
+
+    fun cancelFetch() {
+        fetchJob?.cancel()
+        fetchJob = null
     }
 
     fun addVideo(url: String) {

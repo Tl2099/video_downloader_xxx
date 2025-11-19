@@ -25,6 +25,13 @@ object TextHelper {
         return stripped.take(128).ifBlank { "video" }
     }
 
+    fun String.isYouTubeUrl(): Boolean {
+        val url = this.lowercase()
+        return url.contains("youtube.com") ||
+                url.contains("youtu.be") ||
+                url.contains("m.youtube.com")
+    }
+
     fun validateName(
         input: String,
         til: com.google.android.material.textfield.TextInputLayout

@@ -19,7 +19,6 @@ class AdFilter {
             Pattern.CASE_INSENSITIVE
         )
 
-
         // ================================
         // ADS DOMAIN
         // ================================

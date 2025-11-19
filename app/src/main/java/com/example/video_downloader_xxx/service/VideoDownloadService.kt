@@ -11,6 +11,7 @@ import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.local.reposities.video.VideoInfoRepository
 import com.example.video_downloader_xxx.data.mapper.toEntity
 import com.example.video_downloader_xxx.data.model.VideoInfo
+import com.example.video_downloader_xxx.data.repository.browser.OkHttpVideoDownloader
 import com.example.video_downloader_xxx.data.repository.browser.VideoDownloadManager
 import com.example.video_downloader_xxx.data.repository.library.DownloadRepository
 import com.example.video_downloader_xxx.ui.fragment.library.complete.CompleteFragment
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.koin.android.ext.android.inject
@@ -35,16 +37,21 @@ class VideoDownloadService : Service() {
     private val repo: VideoInfoRepository by inject()
     private val binder = DownloadBinder()
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     private val jobs = mutableMapOf<String, Job>()
+    private val queue = LinkedList<VideoInfo>()
+
+    private val maxConcurrent = 3
+
+    private val pendingDownloads = mutableListOf<VideoInfo>()
     private val downloadQueue: Queue<VideoInfo> = LinkedList()
     private var isDownloading = false
     private val downloadManager = VideoDownloadManager()
-
-    private val pendingDownloads = mutableListOf<VideoInfo>()
+    private val downloader = OkHttpVideoDownloader()
+    private var currentCall: Call? = null
 
     companion object {
         private const val TAG = "VideoDownloadService"
-
         private const val MAX_CONCURRENT_DOWNLOADS = 3
 
         const val EXTRA_ID = "extra_id"
@@ -55,7 +62,6 @@ class VideoDownloadService : Service() {
         const val EXTRA_DURATION = "extra_duration"
         const val EXTRA_FILE_SIZE = "extra_file_size"
     }
-
 
     inner class DownloadBinder : Binder() {
         fun getService(): VideoDownloadService = this@VideoDownloadService
@@ -80,26 +86,6 @@ class VideoDownloadService : Service() {
         Log.d(TAG, "onStartCommand: $intent")
         Log.d(TAG, "onStartCommand: ${intent?.getStringExtra(EXTRA_VIDEO_URL)}")
 
-//        DataExt.listVideoInfo.forEach {
-//            Log.i(TAG, "DataExt.listVideoInfo: ${it.title}")
-//
-//            val video = VideoInfo(
-//                id = it.id,
-//                sourceUrl = it.sourceUrl,
-//                videoUrl = it.videoUrl,
-//                title = it.title,
-//                thumbnailUrl = it.thumbnailUrl,
-//                duration = it.duration,
-//                fileSize = it.fileSize,
-//                downloadStatus = DownloadStatus.PENDING
-//            )
-//
-//            Log.i(TAG, "Starting download for: ${video.title}")
-//
-//            startDownload(video)
-//
-//        }
-
         val sourceUrl = intent?.getStringExtra(EXTRA_SOURCE_URL) ?: return START_NOT_STICKY
         val videoUrl = intent.getStringExtra(EXTRA_VIDEO_URL)
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "Video"
@@ -121,119 +107,167 @@ class VideoDownloadService : Service() {
             downloadStatus = DownloadStatus.PENDING
         )
 
-        Log.i(TAG, "Starting download for: ${video.title}")
         startDownload(video)
 
         return START_STICKY
     }
 
+//    fun startDownload(video: VideoInfo) {
+//        val jobKey = video.id
+//
+//        Log.w(TAG, "Start download: Called")
+//
+//        if (jobs.containsKey(jobKey)) {
+//            Log.w(TAG, "Download already in progress for id: $jobKey")
+//            return
+//        }
+//
+//        Log.i(TAG, "=== Starting new download ===")
+//        Log.i(TAG, "Title: ${video.title}")
+//        Log.i(TAG, "ID: ${video.id}")
+//        Log.i(TAG, "VideoURL: ${video.videoUrl}")
+//        Log.i(TAG, "SourceURL: ${video.sourceUrl}")
+//        Log.i(TAG, "Active jobs: ${jobs.size}")
+//
+//        if (MAX_CONCURRENT_DOWNLOADS > 0 && jobs.size >= MAX_CONCURRENT_DOWNLOADS) {
+//            Log.w(
+//                TAG,
+//                "Max concurrent downloads reached (${jobs.size}/$MAX_CONCURRENT_DOWNLOADS). Adding to queue."
+//            )
+//            pendingDownloads.add(video)
+//            DownloadRepository.addDownloading(video)
+//            return
+//        }
+//
+//        DownloadRepository.addDownloading(video)
+//
+//        val outputDir = FileHelper.createVideoFile(this, video.videoUrl ?: "")
+//
+////        val safeName = video.title.replace(Regex("[\\\\/:*?\"<>|]"), "_")
+////        val outputPath = File(outputDir, "${video.id.take(8)}_$safeName.mp4")
+//        //val outputPath = File(outputDir, "${video.title}.mp4")
+//
+//        val job = serviceScope.launch {
+//            Log.d(TAG, "Start download: ${video.title}")
+//
+//            try {
+//                downloadManager.downloadVideo(
+//                    //httpDownloader.download(
+//                    video,
+//                    outputDir
+//                ).collect { progress ->
+//                    Log.d(
+//                        TAG,
+//                        "Download progress [${video.title}]: ${progress.percent}% - ${progress.logLine}"
+//                    )
+//
+//                    when {
+//                        progress.percent < 0f -> {
+//                            Log.e(TAG, "Download error [${video.title}]: ${progress.logLine}")
+//                            DownloadRepository.markFailed(video.id)
+//                        }
+//
+//                        progress.percent in 0f..99.9f -> {
+//                            DownloadRepository.updateProgress(video.id, progress.percent)
+//                        }
+//
+//                        progress.percent >= 100f -> {
+//                            val localPath = findDownloadedFilePath(outputDir, video.title)
+//                            Log.i(
+//                                TAG,
+//                                "Download completed [${video.title}]. Local path: $localPath"
+//                            )
+//                            //DownloadRepository.markCompleted(video.id, localPath)
+//                            val completedVideo = video.copy(localPath = localPath)
+//                            val entity = completedVideo.toEntity()
+//
+//                            serviceScope.launch {
+//                                repo.insert(entity)
+//                                Log.i(TAG, "=== Data Entity after download ===")
+//                                Log.i(TAG, "Title: ${entity.title}")
+//                                Log.i(TAG, "ID: ${entity.id}")
+//                                Log.i(TAG, "VideoURL: ${entity.videoUrl}")
+//                                Log.i(TAG, "SourceURL: ${entity.sourceUrl}")
+//                                Log.i(TAG, "Active jobs: ${entity.fileSize}")
+//                                Log.i(TAG, "localPath:${entity.filePath}")
+//                                Log.i(TAG, "Saved to Room successfully!")
+//                            }
+//                        }
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                Log.e(TAG, "Download exception [${video.title}]: ${e.message}", e)
+//                DownloadRepository.markFailed(video.id)
+//            } finally {
+//                jobs.remove(jobKey)
+//                Log.d(TAG, "Job removed. Remaining jobs: ${jobs.size}")
+//
+//                nextJob()
+//
+//                if (jobs.isEmpty()) {
+//                    Log.i(TAG, "All downloads completed, stopping service")
+//                    stopSelf()
+//                }
+//            }
+//        }
+//
+//        jobs[jobKey] = job
+//
+////        val task = DownloadTask(videoInfo) { progress ->
+////            updateProgress(videoInfo.id, progress)
+////        }
+////        Log.i("VideoDownloadService_ttdat", "startDownload: ${videoInfo.sourceUrl}")
+////        downloads[videoInfo.id] = task
+////        task.start()
+//    }
+
     fun startDownload(video: VideoInfo) {
-        val jobKey = video.id
+        if (jobs.containsKey(video.id)) return
 
-        Log.w(TAG, "Start download: Called")
-
-        if (jobs.containsKey(jobKey)) {
-            Log.w(TAG, "Download already in progress for id: $jobKey")
-            return
-        }
-
-        Log.i(TAG, "=== Starting new download ===")
-        Log.i(TAG, "Title: ${video.title}")
-        Log.i(TAG, "ID: ${video.id}")
-        Log.i(TAG, "VideoURL: ${video.videoUrl}")
-        Log.i(TAG, "SourceURL: ${video.sourceUrl}")
-        Log.i(TAG, "Active jobs: ${jobs.size}")
-
-        if (MAX_CONCURRENT_DOWNLOADS > 0 && jobs.size >= MAX_CONCURRENT_DOWNLOADS) {
-            Log.w(
-                TAG,
-                "Max concurrent downloads reached (${jobs.size}/$MAX_CONCURRENT_DOWNLOADS). Adding to queue."
-            )
+        if (jobs.size >= MAX_CONCURRENT_DOWNLOADS) {
             pendingDownloads.add(video)
             DownloadRepository.addDownloading(video)
             return
         }
 
-        DownloadRepository.addDownloading(video)
-
-        val outputDir = FileHelper.createVideoFile(this, video.videoUrl ?: "")
+        startJob(video)
 
 //        val safeName = video.title.replace(Regex("[\\\\/:*?\"<>|]"), "_")
-//        val outputPath = File(outputDir, "${video.id.take(8)}_$safeName.mp4")
-        //val outputPath = File(outputDir, "${video.title}.mp4")
+//        val targetFile = File(outputFolder, "$safeName.mp4")
+    }
+
+    private fun startJob(video: VideoInfo) {
+        DownloadRepository.addDownloading(video)
+        val outputFolder = FileHelper.createVideoFile(this, video.videoUrl ?: "")
 
         val job = serviceScope.launch {
-            Log.d(TAG, "Start download: ${video.title}")
-
             try {
-                downloadManager.downloadVideo(
-                    //httpDownloader.download(
-                    video,
-                    outputDir
-                ).collect { progress ->
-                    Log.d(
-                        TAG,
-                        "Download progress [${video.title}]: ${progress.percent}% - ${progress.logLine}"
-                    )
-
-                    when {
-                        progress.percent < 0f -> {
-                            Log.e(TAG, "Download error [${video.title}]: ${progress.logLine}")
-                            DownloadRepository.markFailed(video.id)
-                        }
-
-                        progress.percent in 0f..99.9f -> {
-                            DownloadRepository.updateProgress(video.id, progress.percent)
-                        }
-
-                        progress.percent >= 100f -> {
-                            val localPath = findDownloadedFilePath(outputDir, video.title)
-                            Log.i(
-                                TAG,
-                                "Download completed [${video.title}]. Local path: $localPath"
-                            )
-                            //DownloadRepository.markCompleted(video.id, localPath)
-                            val completedVideo = video.copy(localPath = localPath)
-                            val entity = completedVideo.toEntity()
-
-                            serviceScope.launch {
-                                repo.insert(entity)
-                                Log.i(TAG, "=== Data Entity after download ===")
-                                Log.i(TAG, "Title: ${entity.title}")
-                                Log.i(TAG, "ID: ${entity.id}")
-                                Log.i(TAG, "VideoURL: ${entity.videoUrl}")
-                                Log.i(TAG, "SourceURL: ${entity.sourceUrl}")
-                                Log.i(TAG, "Active jobs: ${entity.fileSize}")
-                                Log.i(TAG, "localPath:${entity.filePath}")
-                                Log.i(TAG, "Saved to Room successfully!")
-                            }
-                        }
+                downloader.downloadVideo(
+                    url = video.videoUrl ?: video.sourceUrl,
+                    destFile = outputFolder,
+                    onProgress = { percent ->
+                        DownloadRepository.updateProgress(video.id, percent.toFloat())
                     }
-                }
+                )
+
+                val completedVideo = video.copy(localPath = outputFolder.absolutePath)
+                Log.i(TAG, "duration: ${completedVideo.duration}")
+                repo.insert(completedVideo.toEntity())
+
+                DownloadRepository.markCompleted(video.id, outputFolder.absolutePath)
+
             } catch (e: Exception) {
-                Log.e(TAG, "Download exception [${video.title}]: ${e.message}", e)
+                Log.e(TAG, "Download error: ${e.message}", e)
                 DownloadRepository.markFailed(video.id)
             } finally {
-                jobs.remove(jobKey)
-                Log.d(TAG, "Job removed. Remaining jobs: ${jobs.size}")
-
-                processNextDownload()
-
-                if (jobs.isEmpty()) {
-                    Log.i(TAG, "All downloads completed, stopping service")
-                    stopSelf()
-                }
+                jobs.remove(video.id)
+                nextJob()
+                if (jobs.isEmpty() && pendingDownloads.isEmpty()) stopSelf()
             }
         }
 
-        jobs[jobKey] = job
+        jobs[video.id] = job
 
-//        val task = DownloadTask(videoInfo) { progress ->
-//            updateProgress(videoInfo.id, progress)
-//        }
-//        Log.i("VideoDownloadService_ttdat", "startDownload: ${videoInfo.sourceUrl}")
-//        downloads[videoInfo.id] = task
-//        task.start()
     }
 
     fun cancelDownload(videoId: String) {
@@ -259,7 +293,7 @@ class VideoDownloadService : Service() {
 
         DownloadRepository.removeDownloading(videoId)
 
-        processNextDownload()
+        nextJob()
 
         if (jobs.isEmpty() && pendingDownloads.isEmpty()) {
             Log.i(TAG, "No more downloads, stopping service")
@@ -285,12 +319,9 @@ class VideoDownloadService : Service() {
         }
     }
 
-    private fun processNextDownload() {
-        if (pendingDownloads.isNotEmpty() &&
-            (MAX_CONCURRENT_DOWNLOADS == 0 || jobs.size < MAX_CONCURRENT_DOWNLOADS)
-        ) {
+    private fun nextJob() {
+        if (pendingDownloads.isNotEmpty() && jobs.size < MAX_CONCURRENT_DOWNLOADS) {
             val nextVideo = pendingDownloads.removeAt(0)
-            Log.i(TAG, "Starting queued download: ${nextVideo.title}")
             startDownload(nextVideo)
         }
     }
@@ -315,9 +346,10 @@ class VideoDownloadService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         Log.d(TAG, "Service destroyed")
+        currentCall?.cancel()
         serviceScope.cancel()
+        super.onDestroy()
     }
 }
 
