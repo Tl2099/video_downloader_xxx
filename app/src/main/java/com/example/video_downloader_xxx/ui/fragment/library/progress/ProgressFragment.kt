@@ -8,8 +8,11 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
+import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.data.repository.library.DownloadRepository
 import com.example.video_downloader_xxx.databinding.FragmentProgressBinding
@@ -87,8 +90,37 @@ class ProgressFragment : BaseFragment<FragmentProgressBinding>() {
     override fun initListener() {
         adapter.onCloseClick = {
             Log.i(TAG, "Close clicked for: ${it.title} (ID: ${it.id})")
-            showCancelConfirmDialog(it)
+            //showCancelConfirmDialog(it)
+            showDeleteDialog(it)
         }
+        adapter.onAdjustClick = {
+
+        }
+    }
+
+    private fun showDeleteDialog(video: VideoInfo){
+        val dialogView = layoutInflater.inflate(R.layout.dialog_delete, null)
+
+        val btnCancel = dialogView.findViewById<AppCompatButton>(R.id.btnCancel)
+        val btnDelete = dialogView.findViewById<AppCompatButton>(R.id.btnDelete)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tvTitle)
+
+        tvTitle.text = getString(R.string.txt_content_1)
+        btnCancel.text = getString(R.string.txt_no)
+        btnDelete.text = getString(R.string.txt_yes)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnDelete.setOnClickListener {
+            cancelDownload(video)
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 
     private fun showCancelConfirmDialog(video: VideoInfo) {
@@ -108,11 +140,11 @@ class ProgressFragment : BaseFragment<FragmentProgressBinding>() {
             downloadService?.cancelDownload(video.id)
             Log.i(TAG, "Cancel request sent to service")
 
-            Toast.makeText(
-                requireContext(),
-                "Đã hủy: ${video.title}",
-                Toast.LENGTH_SHORT
-            ).show()
+//            Toast.makeText(
+//                requireContext(),
+//                "Đã hủy: ${video.title}",
+//                Toast.LENGTH_SHORT
+//            ).show()
         } else {
             Log.w(TAG, "Service not bound, cannot cancel download")
             DownloadRepository.removeDownloading(video.id)

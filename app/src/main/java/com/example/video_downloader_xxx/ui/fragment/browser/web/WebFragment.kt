@@ -16,10 +16,14 @@ import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
@@ -31,11 +35,14 @@ import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.E
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_THUMB
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_TITLE
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_VIDEO_URL
+import com.example.video_downloader_xxx.ui.activity.MainActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserHomeFragment
 import com.example.video_downloader_xxx.util.DownloadStatus
 import com.example.video_downloader_xxx.util.FileHelper
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
@@ -52,6 +59,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private lateinit var webView: WebView
     private val hlsSegments = mutableSetOf<String>()
     private var hlsPlaylistUrl: String? = null
+    private var hasShownAddedDialog = false
 
     private var downloadService: VideoDownloadService? = null
     private var serviceBound = false
@@ -249,6 +257,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             onDownload = {
                 Log.i(TAG, "onDownload: ${it.videoUrl}")
                 startDownload(it)
+                showTaskAddedDialog(it.sourceUrl)
             },
             onClose = {
             }
@@ -261,7 +270,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         val context = requireContext().applicationContext
 
         if (downloadService?.isAlreadyQueuedOrDownloading(videoInfo.id) == true) {
-            Toast.makeText(context, "Video is already in download queue", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(context, "Video is already in download queue", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -280,7 +289,40 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         if (!serviceBound) {
             context.bindService(intent, serviceConnection, BIND_AUTO_CREATE)
         }
-        Toast.makeText(context, "Download started: ${videoInfo.title}", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(context, "Download started: ${videoInfo.title}", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showTaskAddedDialog(sourceUrl: String) {
+        Log.i(TAG, "showTaskAddedDialog: called")
+        if (hasShownAddedDialog) return
+        hasShownAddedDialog = true
+
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_task_add_layout, null)
+
+        val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+        val btnView = view.findViewById<AppCompatTextView>(R.id.btnShowDownload)
+        val btnClose = view.findViewById<AppCompatImageView>(R.id.btnClose)
+
+        tvTitle.text = sourceUrl
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnView.setOnClickListener {
+            dialog.dismiss()
+            (requireActivity() as MainActivity).openProgressScreen()
+        }
+        dialog.setContentView(view)
+        dialog.behavior.isDraggable = false
+        dialog.setOnDismissListener {
+            hasShownAddedDialog = false
+        }
+        dialog.show()
+        view.postDelayed({
+            if (dialog.isShowing) dialog.dismiss()
+        }, 20000)
     }
 
     override fun reloadAds() {

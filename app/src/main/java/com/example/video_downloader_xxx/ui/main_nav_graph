@@ -26,4 +26,14 @@
         android:id="@+id/libraryFragment"
         android:name="com.example.video_downloader_xxx.ui.fragment.library.LibraryFragment"
         android:label="Library" />
+
+    <fragment
+        android:id="@+id/progressFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.library.progress.ProgressFragment"
+        android:label="Library" />
+
+    <fragment
+        android:id="@+id/completeFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.library.complete.CompleteFragment"
+        android:label="Library" />
 </navigation>

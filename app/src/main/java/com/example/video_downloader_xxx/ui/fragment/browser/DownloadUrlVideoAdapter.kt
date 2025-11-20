@@ -38,7 +38,7 @@ class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.V
 
                 root.setOnClickListener {
                     onToggleSelect?.invoke(item)
-                    DataExt.listUrl.add(item.videoUrl ?: "")
+                    //DataExt.listUrl.add(item.videoUrl ?: "")
                 }
 
                 checkbox.setOnCheckedChangeListener { _, isChecked ->

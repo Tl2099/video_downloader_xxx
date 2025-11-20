@@ -16,30 +16,72 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MainActivity : BaseActivity<ActivityMainBinding>() {
     private val sharedVM: SharedViewModel by viewModel()
     private val downloadViewModel: SharedViewModel by viewModel()
+    lateinit var browserNavHost: NavHostFragment
+    lateinit var libraryNavHost: NavHostFragment
     override fun initView() {
+        setupNavHosts()
         setupBottomNav()
         handleKeyboardVisibility()
     }
 
     @SuppressLint("RestrictedApi")
-    private fun setupBottomNav() {
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-        val navOptions = NavOptions.Builder()
-            .setEnterAnim(R.anim.slide_in_right)
-            .setExitAnim(R.anim.slide_out_left)
-            .setPopEnterAnim(R.anim.slide_in_left)
-            .setPopExitAnim(R.anim.slide_out_right)
-            .build()
+    private fun setupNavHosts() {
+        //val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        browserNavHost =
+            supportFragmentManager.findFragmentById(R.id.nav_host_browser) as NavHostFragment
 
-        binding.bottomNav.setOnItemSelectedListener { item ->
-            navController.navigate(item.itemId, null, navOptions)
-            true
-        }
+        libraryNavHost =
+            supportFragmentManager.findFragmentById(R.id.nav_host_library) as NavHostFragment
 
-        binding.bottomNav.itemIconSize
-        binding.bottomNav.setupWithNavController(navController)
+//        val navController = navHostFragment.navController
+//
+//        binding.bottomNav.itemIconSize
+//        binding.bottomNav.setupWithNavController(navController)
     }
+
+    private fun setupBottomNav() {
+        binding.bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_browser ->{
+                    showBrowserTab()
+                    true
+                }
+                R.id.navigation_library -> {
+                    showLibraryTab()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    fun openProgressScreen() {
+        binding.bottomNav.selectedItemId = R.id.navigation_library
+        val controller = libraryNavHost.navController
+        controller.navigate(R.id.libraryFragment)
+    }
+
+    private fun showBrowserTab() {
+        binding.navHostBrowser.visibility = View.VISIBLE
+        binding.navHostLibrary.visibility = View.GONE
+
+        supportFragmentManager.beginTransaction()
+            .show(browserNavHost)
+            .hide(libraryNavHost)
+            .commit()
+    }
+
+    private fun showLibraryTab() {
+        binding.navHostLibrary.visibility = View.VISIBLE
+        binding.navHostBrowser.visibility = View.GONE
+
+        supportFragmentManager.beginTransaction()
+            .show(libraryNavHost)
+            .hide(browserNavHost)
+            .commit()
+    }
+
+
 
     private fun handleKeyboardVisibility() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->

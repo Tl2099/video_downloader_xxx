@@ -1,5 +1,8 @@
 package com.example.video_downloader_xxx.util
 
+import android.widget.EditText
+import com.google.android.material.textfield.TextInputLayout
+
 object TextHelper {
 
     fun guessNameFromUrl(url: String): String {
@@ -34,23 +37,23 @@ object TextHelper {
 
     fun validateName(
         input: String,
-        til: com.google.android.material.textfield.TextInputLayout
+        editText: EditText
     ): Boolean {
         return when {
             input.isBlank() -> {
-                til.error = "Tên không được để trống"; false
+                editText.error = "Tên không được để trống"; false
             }
 
             input.length > 128 -> {
-                til.error = "Tên quá dài (<= 128 ký tự)"; false
+                editText.error = "Tên quá dài (<= 128 ký tự)"; false
             }
 
             input.contains(Regex("""[\\/:*?"<>|]""")) -> {
-                til.error = "Tên chứa ký tự không hợp lệ"; false
+                editText.error = "Tên chứa ký tự không hợp lệ"; false
             }
 
             else -> {
-                til.error = null; true
+                editText.error = null; true
             }
         }
     }

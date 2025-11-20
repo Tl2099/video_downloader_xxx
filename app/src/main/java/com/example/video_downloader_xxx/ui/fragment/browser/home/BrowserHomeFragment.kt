@@ -18,6 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
@@ -35,14 +36,17 @@ import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.E
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_THUMB
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_TITLE
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_VIDEO_URL
+import com.example.video_downloader_xxx.ui.activity.MainActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.EndMarginDecoration
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.SocialAdapter
+import com.example.video_downloader_xxx.ui.fragment.browser.web.WebFragment
 import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
 import com.example.video_downloader_xxx.util.TextHelper.isYouTubeUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -57,7 +61,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     private lateinit var clipboardManager: ClipboardManager
     private var analyzeTimeoutJob: Job? = null
     private val analyzeTimeoutMs = 100_000L
-
+    private var hasShownAddedDialog = false
 
     private val socialAdapter by lazy {
         SocialAdapter(emptyList()) { social ->
@@ -110,11 +114,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 startDownload(url)
             }
         } else {
-            Toast.makeText(
-                requireContext(),
-                "Permission denied. Cannot download videos.",
-                Toast.LENGTH_LONG
-            ).show()
+//            Toast.makeText(
+//                requireContext(),
+//                "Permission denied. Cannot download videos.",
+//                Toast.LENGTH_LONG
+//            ).show()
         }
     }
 
@@ -144,13 +148,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     val sheet = DownloadUrlVideoBottomSheet.newInstance(
                         onDownload = {
                             Log.i(TAG, "onDownload: ${it.videoUrl}")
+                            showTaskAddedDialog(it.sourceUrl)
                             startDownload(it)
-//                            val outFile =
-//                                FileHelper.createVideoFile(requireContext(), it.videoUrl ?: "")
-//                            downloadViewModel.downloadVideo(it, outFile)
                         },
                         onClose = {
-                            //downloadViewModel.clearDetectedVideos()
+
                         }
                     )
                     sheet.show(parentFragmentManager, "DownloadSheet")
@@ -164,7 +166,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         val context = requireContext().applicationContext
 
         if (downloadService?.isAlreadyQueuedOrDownloading(videoInfo.id) == true) {
-            Toast.makeText(context, "Video is already in download queue", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(context, "Video is already in download queue", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -183,7 +185,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         if (!serviceBound) {
             context.bindService(intent, serviceConnection, BIND_AUTO_CREATE)
         }
-        Toast.makeText(context, "Download started: ${videoInfo.title}", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(context, "Download started: ${videoInfo.title}", Toast.LENGTH_SHORT).show()
     }
 
     override fun initListener() {
@@ -216,11 +218,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     binding?.edtUrl?.setSelection(text.length)
                 }
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Không có dữ liệu trong clipboard",
-                    Toast.LENGTH_SHORT
-                ).show()
+//                Toast.makeText(
+//                    requireContext(),
+//                    "Không có dữ liệu trong clipboard",
+//                    Toast.LENGTH_SHORT
+//                ).show()
             }
         }
 
@@ -231,14 +233,13 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 //            }
 //        }
 
-
         binding?.btnSearch?.setOnClickListener {
             hideKeyboard()
             val text = binding?.edtUrl?.text.toString().trim()
 
             if (text.isBlank()) {
-                Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
-                    .show()
+//                Toast.makeText(requireContext(), "Please enter a URL", Toast.LENGTH_SHORT)
+//                    .show()
                 return@setOnClickListener
             }
 
@@ -321,6 +322,39 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             "hasData=$hasData, clip=${clipboardManager.primaryClip?.getItemAt(0)}"
         )
         binding?.icPaste?.isSelected = hasData
+    }
+
+    private fun showTaskAddedDialog(sourceUrl: String) {
+        Log.i(WebFragment.Companion.TAG, "showTaskAddedDialog: called")
+        if (hasShownAddedDialog) return
+        hasShownAddedDialog = true
+
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_task_add_layout, null)
+
+        val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+        val btnView = view.findViewById<AppCompatTextView>(R.id.btnShowDownload)
+        val btnClose = view.findViewById<AppCompatImageView>(R.id.btnClose)
+
+        tvTitle.text = sourceUrl
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnView.setOnClickListener {
+            dialog.dismiss()
+            (requireActivity() as MainActivity).openProgressScreen()
+        }
+        dialog.setContentView(view)
+        dialog.behavior.isDraggable = false
+        dialog.setOnDismissListener {
+            hasShownAddedDialog = false
+        }
+        dialog.show()
+        view.postDelayed({
+            if (dialog.isShowing) dialog.dismiss()
+        }, 20000)
     }
 
     private fun observeDownloadState() {
@@ -434,8 +468,8 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             loadingAnim.isVisible = false
             txtStatus.text = getString(R.string.txt_analyzing_timeout)
         }
-        Toast.makeText(requireContext(), "Phân tích quá lâu, vui lòng thử lại", Toast.LENGTH_SHORT)
-            .show()
+//        Toast.makeText(requireContext(), "Phân tích quá lâu, vui lòng thử lại", Toast.LENGTH_SHORT)
+//            .show()
     }
 
     private fun showInvalidLinkDialog(

@@ -17,7 +17,7 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolBar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="?attr/actionBarSize"
             app:layout_scrollFlags="scroll|enterAlways|snap">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -109,9 +109,9 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
+        android:layout_marginTop="60dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="60dp">
+        android:layout_height="match_parent">
 
         <View
             android:layout_width="match_parent"
@@ -123,6 +123,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="4dp"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             android:orientation="horizontal" />
 
         <ProgressBar

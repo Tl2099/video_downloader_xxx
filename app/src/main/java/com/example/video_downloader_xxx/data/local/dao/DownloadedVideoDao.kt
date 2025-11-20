@@ -13,15 +13,18 @@ interface DownloadedVideoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(video: DownloadedVideoEntity)
 
+    @Query("UPDATE downloaded_videos SET title = :name WHERE id = :id")
+    suspend fun updateName(id: String, name: String)
+
     @Delete
     suspend fun delete(video: DownloadedVideoEntity)
 
     @Query("DELETE FROM downloaded_videos")
     suspend fun deleteAll()
 
-    @Query("SELECT * FROM downloaded_videos ORDER BY id DESC")
+    @Query("SELECT * FROM downloaded_videos ORDER BY downloadedAt DESC")
     suspend fun getAll(): List<DownloadedVideoEntity>
 
-    @Query("SELECT * FROM downloaded_videos ORDER BY id DESC")
+    @Query("SELECT * FROM downloaded_videos ORDER BY downloadedAt ASC")
     fun observeAll(): Flow<List<DownloadedVideoEntity>>
 }

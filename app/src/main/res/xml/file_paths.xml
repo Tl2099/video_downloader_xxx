@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <external-path
+        name="download_root"
+        path="Download/" />
+
+    <external-path
+        name="vd_app_dir"
+        path="Download/video_downloader_xxx/" />
+
+    <external-path
+        name="vd_video_dir"
+        path="Download/video_downloader_xxx/video/" />
+
+</paths>

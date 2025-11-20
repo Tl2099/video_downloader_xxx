@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/browser_nav_graph"
+    app:startDestination="@id/browserFragment">
+
+    <fragment
+        android:id="@+id/browserFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserHomeFragment"
+        android:label="Browser">
+        <action
+            android:id="@+id/action_browserFragment_to_webFragment"
+            app:destination="@id/webFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/webFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.browser.web.WebFragment"
+        android:label="WebFragment">
+        <argument
+            android:name="url"
+            app:argType="string" />
+    </fragment>
+
+</navigation>

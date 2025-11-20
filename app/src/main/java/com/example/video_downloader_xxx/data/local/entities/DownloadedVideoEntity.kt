@@ -16,6 +16,6 @@ data class DownloadedVideoEntity(
     val fileSize: String?,
     val duration: String?,
     val thumbnailUrl: String?,
-    val createdAt: Long = System.currentTimeMillis()
+    val downloadedAt: Long,
 )
 

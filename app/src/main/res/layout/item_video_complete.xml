@@ -13,16 +13,16 @@
         android:layout_height="0dp"
         android:layout_marginVertical="8dp"
         android:layout_marginStart="16dp"
-        android:scaleType="centerCrop"
         android:adjustViewBounds="true"
         android:background="@drawable/item_video_bg_item_img"
-        app:shapeAppearanceOverlay="@style/RoundedImageStyle"
-        app:layout_constraintDimensionRatio="112:74"
-        app:layout_constraintWidth_max="360dp"
+        android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="112:74"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.3111" />
+        app:layout_constraintWidth_max="360dp"
+        app:layout_constraintWidth_percent="0.3111"
+        app:shapeAppearanceOverlay="@style/RoundedImageStyle" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvTime"
@@ -50,7 +50,7 @@
         android:maxLines="1"
         android:text="Sẽ gầy"
         android:textColor="@color/black"
-        android:textSize="12sp"
+        android:textSize="14sp"
         app:layout_constraintEnd_toStartOf="@id/btnMore"
         app:layout_constraintStart_toEndOf="@id/imgThumbnail"
         app:layout_constraintTop_toTopOf="@id/imgThumbnail" />
@@ -66,7 +66,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileSize"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:ellipsize="end"
@@ -74,15 +74,28 @@
         android:maxLines="1"
         android:text="Không chê"
         android:textColor="@color/gray_dark_1"
-        android:textSize="10sp"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@id/icMedia"
         app:layout_constraintStart_toEndOf="@id/icMedia"
-        app:layout_constraintTop_toTopOf="@id/icMedia"
-        tools:ignore="SmallSp" />
+        app:layout_constraintTop_toTopOf="@id/icMedia" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvTimeDownload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="9dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/roboto"
+        android:maxLines="1"
+        android:text="Không chê"
+        android:textColor="@color/gray_dark_1"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@id/tvTitle"
+        app:layout_constraintTop_toBottomOf="@id/icMedia" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/btnMore"
-        android:layout_width="32dp"
+        android:layout_width="50dp"
         android:layout_height="32dp"
         android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"

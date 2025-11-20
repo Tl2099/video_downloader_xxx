@@ -58,4 +58,19 @@
     <string name="txt_so_long_time">Analysis took too long, please try again.</string>
     <string name="txt_fetch_fail">Failed to fetch video data. Check the link and try again.</string>
 
+    <!--Bottom sheet task added screen-->
+    <string name="txt_task_added">Task added</string>
+    <string name="txt_view">View</string>
+
+    <!--Dialog rename screen-->
+    <string name="txt_rename_1">Rename</string>
+    <string name="txt_cancel_2">Cancel</string>
+
+    <!--Dialog destroy download screen-->
+    <string name="txt_yes">Yes</string>
+    <string name="txt_no">No</string>
+    <string name="txt_content_1">This action cannot be undone. Do you want to continue?</string>
+
+
+
 </resources>

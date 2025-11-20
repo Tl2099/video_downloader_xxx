@@ -11,17 +11,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
-import com.example.video_downloader_xxx.databinding.BottomSheetLayoutBinding
+import com.example.video_downloader_xxx.databinding.BottomSheetDownloadLayoutBinding
 import com.example.video_downloader_xxx.ui.activity.PlayerActivity
+import com.example.video_downloader_xxx.ui.dialog.RenameDialog
 import com.example.video_downloader_xxx.ui.fragment.browser.DownloadUrlVideoAdapter
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
-import com.example.video_downloader_xxx.ui.fragment.library.complete.CompleteFragment.Companion.TAG
 import com.example.video_downloader_xxx.util.TextHelper
+import com.example.video_downloader_xxx.util.TextHelper.extractExtension
+import com.example.video_downloader_xxx.util.TextHelper.sanitizeFileName
+import com.example.video_downloader_xxx.util.TextHelper.validateName
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -34,7 +39,7 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
-    private var _binding: BottomSheetLayoutBinding? = null
+    private var _binding: BottomSheetDownloadLayoutBinding? = null
     private val binding get() = _binding!!
 
     private val adapter: DownloadUrlVideoAdapter by lazy { DownloadUrlVideoAdapter() }
@@ -75,7 +80,7 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = BottomSheetLayoutBinding.inflate(inflater, container, false)
+        _binding = BottomSheetDownloadLayoutBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -122,7 +127,7 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
         binding.btnDownload.setOnClickListener {
             val listVideoSelected = downloadViewModel.getSelectedVideos()
             if (listVideoSelected.isEmpty()) {
-                Toast.makeText(requireContext(), "Chưa chọn video nào", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(requireContext(), "Chưa chọn video nào", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             } else {
                 listVideoSelected.forEach {
@@ -145,60 +150,37 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
     }
 
     private fun showRenameDialog(video: VideoInfo) {
-        val current =
-            (video.title.ifBlank { TextHelper.guessNameFromUrl(video.sourceUrl) }).take(128)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_rename, null)
 
-        val inputLayout = TextInputLayout(requireContext()).apply {
-            isHintEnabled = true
-            hint = "New name"
-            setPadding(24, 8, 24, 0)
-        }
-        val edit = TextInputEditText(requireContext()).apply {
-            setText(current)
-            setSelection(text?.length ?: 0)
-            maxLines = 1
-            isSingleLine = true
-            setEms(24)
-            inputType = InputType.TYPE_CLASS_TEXT or
-                    InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        }
-        inputLayout.addView(edit)
+        val edtName = dialogView.findViewById<EditText>(R.id.edtName)
+        val btnCancel = dialogView.findViewById<AppCompatButton>(R.id.btnCancel)
+        val btnRename = dialogView.findViewById<AppCompatButton>(R.id.btnRename)
 
-        val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.txt_rename)
-            .setView(inputLayout)
-            .setNegativeButton(R.string.txt_cancel_dialog, null)
-            .setPositiveButton(R.string.txt_rename, null)
+        edtName.setText(video.title)
+        edtName.setSelection(video.title.length)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
             .create()
 
-        dialog.setOnShowListener {
-            edit.post {
-                edit.requestFocus()
-                val imm =
-                    requireContext().getSystemService(Context.INPUT_METHOD_SERVICE)
-                            as InputMethodManager
-                imm.showSoftInput(edit, InputMethodManager.SHOW_IMPLICIT)
-            }
+        btnCancel.setOnClickListener { dialog.dismiss() }
 
-            val btn = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            btn.setOnClickListener {
-                val raw = edit.text?.toString()?.trim().orEmpty()
-                val ok = TextHelper.validateName(raw, inputLayout)
-                if (!ok) return@setOnClickListener
+        btnRename.setOnClickListener {
+            val newName = edtName.text.toString().trim()
+            val ok = validateName(newName, edtName)
+            if (!ok) return@setOnClickListener
 
-                val ext = TextHelper.extractExtension(video.videoUrl ?: video.sourceUrl)
-                val clean = TextHelper.sanitizeFileName(raw.removeSuffix(".$ext"))
-                val finalName = if (ext.isNotEmpty()) "$clean.$ext" else clean
+            val ext = extractExtension(video.videoUrl ?: video.sourceUrl)
+            val clean = sanitizeFileName(newName.removeSuffix(".$ext"))
+            val finalName = if (ext.isNotEmpty()) "$clean.$ext" else clean
 
-                downloadViewModel.rename(video, finalName)
+            downloadViewModel.rename(video, finalName)
 
-                dialog.dismiss()
-            }
+            dialog.dismiss()
         }
-
         dialog.show()
     }
-
 
     companion object {
         const val TAG = "DownloadUrlVideoBottomSheet"

@@ -11,11 +11,10 @@
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_gravity="center"
         android:gravity="center"
-        android:text="Are you sure you want \nto delete it?"
+        android:text="Are you sure you want to delete it?"
         android:textColor="@color/black"
         android:textSize="16sp"
         android:textStyle="bold" />
@@ -51,7 +50,7 @@
             android:layout_weight="1" />
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnRename"
+            android:id="@+id/btnDelete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingHorizontal="25dp"

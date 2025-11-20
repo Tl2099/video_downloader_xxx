@@ -250,7 +250,7 @@ class VideoDownloadService : Service() {
                     }
                 )
 
-                val completedVideo = video.copy(localPath = outputFolder.absolutePath)
+                val completedVideo = video.copy(localPath = outputFolder.absolutePath, downloadedAt = System.currentTimeMillis())
                 Log.i(TAG, "duration: ${completedVideo.duration}")
                 repo.insert(completedVideo.toEntity())
 

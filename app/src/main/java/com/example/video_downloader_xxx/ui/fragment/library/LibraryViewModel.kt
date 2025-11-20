@@ -26,6 +26,10 @@ class LibraryViewModel(private val repo: VideoInfoRepository): ViewModel() {
             emptyList()
         )
 
+    fun rename(video: VideoInfo, newName: String) = viewModelScope.launch {
+        repo.updateName(video.toEntity().id, newName)
+    }
+
     fun saveDownloaded(video: VideoInfo){
         viewModelScope.launch {
             repo.insert(video.toEntity())

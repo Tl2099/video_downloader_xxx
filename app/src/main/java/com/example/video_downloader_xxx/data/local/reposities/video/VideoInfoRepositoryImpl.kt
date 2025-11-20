@@ -9,6 +9,10 @@ class VideoInfoRepositoryImpl(private val dao: DownloadedVideoDao): VideoInfoRep
         dao.insert(video)
     }
 
+    override suspend fun updateName(id: String, name: String) {
+        dao.updateName(id, name)
+    }
+
     override suspend fun delete(video: DownloadedVideoEntity) {
         dao.delete(video)
     }

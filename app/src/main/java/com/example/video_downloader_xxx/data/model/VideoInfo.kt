@@ -14,5 +14,6 @@ data class VideoInfo (
     val isSelected: Boolean = false,
     val progress: Float = 0f,
     val localPath: String? = null,
+    val downloadedAt: Long? = null,
     val downloadStatus: DownloadStatus = DownloadStatus.PENDING
 )

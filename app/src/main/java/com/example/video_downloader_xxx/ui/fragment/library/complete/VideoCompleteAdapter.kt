@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.ItemVideoCompleteBinding
-import com.example.video_downloader_xxx.util.glideLoad
+import com.example.video_downloader_xxx.util.formatTimestamp
 import com.example.video_downloader_xxx.util.glideLoadUseCache
 
 class VideoCompleteAdapter() : RecyclerView.Adapter<VideoCompleteAdapter.ViewHolder>() {
@@ -21,10 +21,12 @@ class VideoCompleteAdapter() : RecyclerView.Adapter<VideoCompleteAdapter.ViewHol
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: VideoInfo) {
             with(binding) {
+                val formatted = item.downloadedAt?.let { formatTimestamp(it) } ?: "N/A"
                 imgThumbnail.glideLoadUseCache(item.videoUrl ?: "", R.drawable.video_placeholder)
                 tvTitle.text = item.title
                 tvTime.text = item.duration
                 tvFileSize.text = item.fileSize
+                tvTimeDownload.text = formatted
 
                 root.setOnClickListener {
                     onItemClick?.invoke(item)

@@ -1,23 +1,29 @@
 package com.example.video_downloader_xxx.ui.fragment.library.complete
 
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.fragment.app.activityViewModels
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.widget.AppCompatButton
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.DataExt
-import com.example.video_downloader_xxx.data.DataExt.indexPos
-import com.example.video_downloader_xxx.data.DataExt.listUrl
+import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentCompleteBinding
-import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.activity.PlayerActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserHomeFragment
-import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
+import com.example.video_downloader_xxx.util.TextHelper.extractExtension
+import com.example.video_downloader_xxx.util.TextHelper.sanitizeFileName
+import com.example.video_downloader_xxx.util.TextHelper.validateName
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
+import java.io.File
 
 class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
     private val library: LibraryViewModel by activityViewModel()
@@ -62,23 +68,110 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
         adapter.onMoreClick = { video ->
             val sheet = CompleteBottomSheet.newInstance(
                 onShare = {
-
+                    video.localPath?.let { path ->
+                        shareVideo(requireContext(), path)
+                    }
                 },
                 onRename = {
-
+                    showRenameDialog(video)
                 },
                 onDelete = {
-
+                    showDeleteDialog(video)
                 }
             )
             sheet.setVideo(video)
             sheet.show(parentFragmentManager, "DownloadSheet")
         }
-
-        binding?.btnDeleteAll?.setOnClickListener {
-            library.deleteAll()
-        }
     }
+
+    private fun showDeleteDialog(video: VideoInfo){
+        val dialogView = layoutInflater.inflate(R.layout.dialog_delete, null)
+
+        val btnCancel = dialogView.findViewById<AppCompatButton>(R.id.btnCancel)
+        val btnDelete = dialogView.findViewById<AppCompatButton>(R.id.btnDelete)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnDelete.setOnClickListener {
+            deleteFileAndRecord(video)
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+    private fun deleteFileAndRecord(video: VideoInfo) {
+        video.localPath?.let { path ->
+            val file = File(path)
+            if (file.exists()) {
+                val deleted = file.delete()
+                Log.i("Delete", "File deleted: $deleted at $path")
+            }
+        }
+
+        library.delete(video)
+    }
+
+
+    private fun showRenameDialog(video: VideoInfo) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_rename, null)
+
+        val edtName = dialogView.findViewById<EditText>(R.id.edtName)
+        val btnCancel = dialogView.findViewById<AppCompatButton>(R.id.btnCancel)
+        val btnRename = dialogView.findViewById<AppCompatButton>(R.id.btnRename)
+
+        edtName.setText(video.title)
+        edtName.setSelection(video.title.length)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnRename.setOnClickListener {
+            val newName = edtName.text.toString().trim()
+            val ok = validateName(newName, edtName)
+            if (!ok) return@setOnClickListener
+
+            val ext = extractExtension(video.videoUrl ?: video.sourceUrl)
+            val clean = sanitizeFileName(newName.removeSuffix(".$ext"))
+            val finalName = if (ext.isNotEmpty()) "$clean.$ext" else clean
+
+            library.rename(video, finalName)
+
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+    fun shareVideo(context: Context, videoPath: String) {
+        val file = File(videoPath)
+
+        if (!file.exists()) {
+            //Toast.makeText(context, "File không tồn tại!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val uri = FileProvider.getUriForFile(
+            context,
+            context.packageName + ".provider",
+            file
+        )
+
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "video/*"
+        intent.putExtra(Intent.EXTRA_STREAM, uri)
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        context.startActivity(Intent.createChooser(intent, "Chia sẻ video qua..."))
+    }
+
 
     override fun reloadAds() {
     }

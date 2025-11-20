@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface VideoInfoRepository {
     suspend fun insert(video: DownloadedVideoEntity)
+    suspend fun updateName(id: String, name: String)
     suspend fun delete(video: DownloadedVideoEntity)
     suspend fun deleteAll()
     suspend fun getAll(): List<DownloadedVideoEntity>
