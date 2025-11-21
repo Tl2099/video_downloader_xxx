@@ -11,11 +11,15 @@ import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.ActivityMainBinding
 import com.example.video_downloader_xxx.ui.base.BaseActivity
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import kotlin.getValue
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
     private val sharedVM: SharedViewModel by viewModel()
     private val downloadViewModel: SharedViewModel by viewModel()
+    private val library: LibraryViewModel by viewModel()
     lateinit var browserNavHost: NavHostFragment
     lateinit var libraryNavHost: NavHostFragment
     override fun initView() {
@@ -58,7 +62,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     fun openProgressScreen() {
         binding.bottomNav.selectedItemId = R.id.navigation_library
         val controller = libraryNavHost.navController
-        controller.navigate(R.id.libraryFragment)
+        val options = NavOptions.Builder()
+            .setPopUpTo(R.id.libraryFragment, true)
+            .setLaunchSingleTop(false)
+            .build()
+        controller.navigate(R.id.libraryFragment, null, options)
+        controller.currentBackStackEntry?.savedStateHandle?.set("open_progress", true)
+        //controller.navigate(R.id.libraryFragment)
+        library.openProgressTab.tryEmit(Unit)
     }
 
     private fun showBrowserTab() {

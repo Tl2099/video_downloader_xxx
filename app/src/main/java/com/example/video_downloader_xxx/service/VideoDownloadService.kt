@@ -254,6 +254,8 @@ class VideoDownloadService : Service() {
                 Log.i(TAG, "duration: ${completedVideo.duration}")
                 repo.insert(completedVideo.toEntity())
 
+                DownloadRepository.removeDownloading(video.id)
+
                 DownloadRepository.markCompleted(video.id, outputFolder.absolutePath)
 
             } catch (e: Exception) {

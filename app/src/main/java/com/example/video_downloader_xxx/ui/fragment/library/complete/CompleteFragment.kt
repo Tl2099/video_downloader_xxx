@@ -3,11 +3,14 @@ package com.example.video_downloader_xxx.ui.fragment.library.complete
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.FileProvider
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.DataExt
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import java.io.File
+import androidx.core.graphics.drawable.toDrawable
 
 class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
     private val library: LibraryViewModel by activityViewModel()
@@ -48,6 +52,7 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
                     Log.i(TAG, "localPath:${i.localPath}")
                 }
                 adapter.addData(it)
+                binding?.imgEmpty?.isVisible = it.isEmpty()
             }.launchIn(lifecycleScope)
     }
 
@@ -95,6 +100,8 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
             .setCancelable(true)
             .create()
 
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
         btnCancel.setOnClickListener { dialog.dismiss() }
 
         btnDelete.setOnClickListener {
@@ -131,6 +138,8 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
             .setView(dialogView)
             .setCancelable(true)
             .create()
+
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
         btnCancel.setOnClickListener { dialog.dismiss() }
 

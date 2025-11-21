@@ -22,9 +22,9 @@ interface DownloadedVideoDao {
     @Query("DELETE FROM downloaded_videos")
     suspend fun deleteAll()
 
-    @Query("SELECT * FROM downloaded_videos ORDER BY downloadedAt DESC")
+    @Query("SELECT * FROM downloaded_videos ORDER BY downloadedAt DESC")//ASC
     suspend fun getAll(): List<DownloadedVideoEntity>
 
-    @Query("SELECT * FROM downloaded_videos ORDER BY downloadedAt ASC")
+    @Query("SELECT * FROM downloaded_videos ORDER BY downloadedAt DESC")
     fun observeAll(): Flow<List<DownloadedVideoEntity>>
 }

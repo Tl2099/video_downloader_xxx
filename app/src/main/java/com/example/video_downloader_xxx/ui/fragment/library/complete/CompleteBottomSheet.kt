@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.BottomSheetCompleteLayoutBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -34,6 +36,19 @@ class CompleteBottomSheet() : BottomSheetDialogFragment() {
         }
 
         return dialog
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val window = dialog?.window ?: return
+
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.statusBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        WindowInsetsControllerCompat(window, window.decorView)
+            .hide(WindowInsetsCompat.Type.navigationBars())
     }
 
     fun setVideo(video: VideoInfo) {

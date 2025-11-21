@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/powder_blue"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:gravity="center">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycleViewListVideoProgress"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="4dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
+        android:visibility="visible"
         android:clipToPadding="false"
         android:orientation="vertical"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
@@ -27,8 +25,9 @@
         android:background="@drawable/onboarding_bg_btn_next"
         android:paddingHorizontal="40dp"
         android:paddingVertical="10dp"
+        android:layout_gravity="center"
         android:text="@string/txt_go_complete"
         android:textColor="@color/white"
         android:textSize="14sp"
         android:visibility="gone" />
-</androidx.appcompat.widget.LinearLayoutCompat>
+</FrameLayout>

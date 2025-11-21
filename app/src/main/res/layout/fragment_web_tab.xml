@@ -3,9 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/containerBrowser"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clipChildren="false"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
@@ -45,6 +43,8 @@
                     android:ellipsize="end"
                     android:gravity="center_vertical"
                     android:maxLines="1"
+                    android:imeOptions="actionGo"
+                    android:inputType="textUri"
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="5dp"
                     android:singleLine="true"
@@ -105,39 +105,26 @@
                     app:srcCompat="@drawable/ic_more" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
+
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <FrameLayout
-        android:layout_marginTop="60dp"
+    <WebView
+        android:id="@+id/webViewContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:background="@drawable/shadow_bottom" />
-
-        <WebView
-            android:id="@+id/webViewContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="4dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            android:orientation="horizontal" />
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_gravity="top"
-            android:indeterminate="false"
-            android:max="100"
-            android:progress="0"
-            android:progressDrawable="@drawable/progress_bar_style" />
-
-    </FrameLayout>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_gravity="top"
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/progress_bar_style" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabDownload"

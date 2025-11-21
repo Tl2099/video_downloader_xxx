@@ -5,13 +5,16 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.widget.AppCompatButton
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.data.repository.library.DownloadRepository
@@ -19,7 +22,6 @@ import com.example.video_downloader_xxx.databinding.FragmentProgressBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
-import com.example.video_downloader_xxx.ui.fragment.library.complete.CompleteFragment
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -84,7 +86,13 @@ class ProgressFragment : BaseFragment<FragmentProgressBinding>() {
                     Log.i(TAG, "localPath:${i.localPath}")
                 }
                 adapter.addData(it)
+
+                binding?.btnGoComplete?.isVisible = it.isEmpty()
             }.launchIn(lifecycleScope)
+
+        binding?.btnGoComplete?.setOnClickListener {
+           library.goToDownloadTab.tryEmit(Unit)
+        }
     }
 
     override fun initListener() {
@@ -98,7 +106,7 @@ class ProgressFragment : BaseFragment<FragmentProgressBinding>() {
         }
     }
 
-    private fun showDeleteDialog(video: VideoInfo){
+    private fun showDeleteDialog(video: VideoInfo) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_delete, null)
 
         val btnCancel = dialogView.findViewById<AppCompatButton>(R.id.btnCancel)
@@ -113,6 +121,8 @@ class ProgressFragment : BaseFragment<FragmentProgressBinding>() {
             .setView(dialogView)
             .setCancelable(true)
             .create()
+
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
         btnCancel.setOnClickListener { dialog.dismiss() }
 

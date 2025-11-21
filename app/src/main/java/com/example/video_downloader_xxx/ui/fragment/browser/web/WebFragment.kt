@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context.BIND_AUTO_CREATE
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -20,6 +21,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -42,6 +44,7 @@ import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserHomeFragment
 import com.example.video_downloader_xxx.util.DownloadStatus
 import com.example.video_downloader_xxx.util.FileHelper
+import com.example.video_downloader_xxx.util.hideKeyboard
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
@@ -60,6 +63,9 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val hlsSegments = mutableSetOf<String>()
     private var hlsPlaylistUrl: String? = null
     private var hasShownAddedDialog = false
+
+    private var lastScrollY = 0
+    private var isToolbarShown = true
 
     private var downloadService: VideoDownloadService? = null
     private var serviceBound = false
@@ -124,7 +130,29 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                     webView.goForward()
                 }
             }
+
+            edtSearch.setOnEditorActionListener { v, actionId, event ->
+
+                val text = v.text.toString().trim()
+
+                if(text.isNotEmpty()){
+                    loadInput(text)
+                }
+                true
+
+            }
         }
+    }
+
+    private fun loadInput(input: String) {
+        hideKeyboard()
+        val url = when {
+            input.startsWith("http://") || input.startsWith("https://") -> input
+            input.contains(".") -> "https://$input"
+            else -> "https://www.google.com/search?q=${input.replace(" ", "+")}"
+        }
+        webView.loadUrl(url)
+        binding?.edtSearch?.clearFocus()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -178,6 +206,20 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                     visibility = if (newProgress < 100) View.VISIBLE else View.GONE
                 }
             }
+        }
+
+        webView.viewTreeObserver.addOnScrollChangedListener {
+            val currentY = webView.scrollY
+            if (currentY > lastScrollY + 10 && isToolbarShown) {
+                binding?.appBarLayout?.setExpanded(false, true)
+                isToolbarShown = false
+            }
+            if (currentY < lastScrollY - 10 && !isToolbarShown) {
+                binding?.appBarLayout?.setExpanded(true, true)
+                isToolbarShown = true
+            }
+
+            lastScrollY = currentY
         }
     }
 
@@ -305,6 +347,8 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         val btnClose = view.findViewById<AppCompatImageView>(R.id.btnClose)
 
         tvTitle.text = sourceUrl
+
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
         btnClose.setOnClickListener {
             dialog.dismiss()

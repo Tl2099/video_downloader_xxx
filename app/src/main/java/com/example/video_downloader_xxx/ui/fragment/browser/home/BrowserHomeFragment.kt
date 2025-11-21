@@ -336,6 +336,8 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         val btnView = view.findViewById<AppCompatTextView>(R.id.btnShowDownload)
         val btnClose = view.findViewById<AppCompatImageView>(R.id.btnClose)
 
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
         tvTitle.text = sourceUrl
 
         btnClose.setOnClickListener {
