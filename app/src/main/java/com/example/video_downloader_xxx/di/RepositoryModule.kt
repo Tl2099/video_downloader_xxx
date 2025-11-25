@@ -6,6 +6,8 @@ import com.example.video_downloader_xxx.data.repository.VideoRepository
 import com.example.video_downloader_xxx.data.repository.browser.SocialRepository
 import com.example.video_downloader_xxx.data.repository.web.DownloadVideosOnWebRepository
 import com.example.video_downloader_xxx.data.repository.web.DownloadVideosOnWebRepositoryImpl
+import com.example.video_downloader_xxx.data.repository.webHistory.WebsiteHistoryRepository
+import com.example.video_downloader_xxx.data.repository.webHistory.WebsiteHistoryRepositoryImpl
 import org.koin.dsl.module
 
 val repositoryModule = module{
@@ -13,4 +15,5 @@ val repositoryModule = module{
     single { SocialRepository() }
     single<DownloadVideosOnWebRepository> { DownloadVideosOnWebRepositoryImpl() }
     single<VideoInfoRepository> { VideoInfoRepositoryImpl(get()) }
+    single<WebsiteHistoryRepository> { WebsiteHistoryRepositoryImpl(get()) }
 }

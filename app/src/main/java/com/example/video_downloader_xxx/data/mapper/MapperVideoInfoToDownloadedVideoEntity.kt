@@ -1,7 +1,9 @@
 package com.example.video_downloader_xxx.data.mapper
 
 import com.example.video_downloader_xxx.data.local.entities.DownloadedVideoEntity
+import com.example.video_downloader_xxx.data.local.entities.WebsiteHistoryEntity
 import com.example.video_downloader_xxx.data.model.VideoInfo
+import com.example.video_downloader_xxx.data.model.WebHistory
 import com.example.video_downloader_xxx.util.DownloadStatus
 
 fun VideoInfo.toEntity(): DownloadedVideoEntity {
@@ -32,4 +34,18 @@ fun DownloadedVideoEntity.toVideoInfo(): VideoInfo {
         downloadedAt = this.downloadedAt
     )
 }
+
+fun WebsiteHistoryEntity.toWebHistory() = WebHistory(
+    url = url,
+    title = title,
+    faviconUrl = faviconUrl,
+    lastVisited = lastVisited
+)
+
+fun WebHistory.toWebsiteHistoryEntity() = WebsiteHistoryEntity(
+    url = url,
+    title = title,
+    faviconUrl = faviconUrl,
+    lastVisited = lastVisited
+)
 

@@ -71,6 +71,8 @@
     <string name="txt_no">No</string>
     <string name="txt_content_1">This action cannot be undone. Do you want to continue?</string>
 
-
+    <!--Dialog clear history screen-->
+    <string name="txt_title_clear_history">Clear history</string>
+    <string name="txt_content_clear_history">Would you like to clear all browser history?</string>
 
 </resources>

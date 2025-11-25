@@ -6,8 +6,11 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.example.video_downloader_xxx.ui.fragment.browser.history.WebsiteHistoryViewModel
 import com.example.video_downloader_xxx.util.AdFilter
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import java.util.Collections
+import kotlin.getValue
 
 class WebViewClient(
     private val callbacks: WebCallbacks

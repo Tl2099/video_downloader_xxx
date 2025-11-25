@@ -9,6 +9,7 @@ import org.koin.dsl.module
 val databaseModule = module {
     single { provideDatabase(get()) }
     single { provideDownloadedVideoDAO(get()) }
+    single { provideWebsiteHistoryDao(get()) }
 }
 
 private fun provideDatabase(application: Application): AppDatabase {
@@ -17,3 +18,5 @@ private fun provideDatabase(application: Application): AppDatabase {
 }
 
 private fun provideDownloadedVideoDAO(db: AppDatabase) = db.downloadedVideoDao()
+
+private fun provideWebsiteHistoryDao(db: AppDatabase) = db.websiteHistoryDao()

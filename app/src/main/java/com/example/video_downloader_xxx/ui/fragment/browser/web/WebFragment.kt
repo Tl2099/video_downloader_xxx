@@ -7,11 +7,13 @@ import android.content.ComponentName
 import android.content.Context.BIND_AUTO_CREATE
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.IBinder
+import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
@@ -25,8 +27,10 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.DataExt
+import com.example.video_downloader_xxx.data.local.entities.WebsiteHistoryEntity
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
@@ -41,6 +45,7 @@ import com.example.video_downloader_xxx.ui.activity.MainActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.history.WebsiteHistoryViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserHomeFragment
 import com.example.video_downloader_xxx.util.DownloadStatus
 import com.example.video_downloader_xxx.util.FileHelper
@@ -55,21 +60,28 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.qualifier._q
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val downloadViewModel: SharedViewModel by activityViewModel()
+    private val history: WebsiteHistoryViewModel by activityViewModel()
     private lateinit var webView: WebView
     private val hlsSegments = mutableSetOf<String>()
     private var hlsPlaylistUrl: String? = null
     private var hasShownAddedDialog = false
 
+    private var currentTitle: String? = null
+    private var currentFavicon: Bitmap? = null
+
     private var lastScrollY = 0
     private var isToolbarShown = true
 
+    private val args: WebFragmentArgs by navArgs()
+
     private var downloadService: VideoDownloadService? = null
     private var serviceBound = false
-    private val serviceConnection = object : ServiceConnection{
+    private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(
             name: ComponentName?,
             service: IBinder?
@@ -135,7 +147,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
                 val text = v.text.toString().trim()
 
-                if(text.isNotEmpty()){
+                if (text.isNotEmpty()) {
                     loadInput(text)
                 }
                 true
@@ -185,28 +197,55 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                     fabState(false)
                     binding?.edtSearch?.setText(it)
                 },
-                onPageFinishedCallback = {
-                    Log.i(TAG, "onPageFinished: $it")
-                    binding?.edtSearch?.setText(it)
+                onPageFinishedCallback = { url ->
+                    Log.i(TAG, "onPageFinished: $url")
+                    binding?.edtSearch?.setText(url)
+
+                    if (!isAdded) return@WebCallbacks
+
+                    if (!url.isNullOrBlank()) {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            if (!isAdded) return@launch
+                            history.addVisit(
+                                WebsiteHistoryEntity(
+                                    url = url,
+                                    title = currentTitle ?: "UnKnown",
+                                    faviconUrl = currentFavicon?.let { bitmapToBase64(it) },
+                                    lastVisited = System.currentTimeMillis()
+                                )
+                            )
+                        }
+                    }
                 },
-                onVideoUrlDetected = { url, contentType, contentLength ->
-                    Log.i("ttdat", "setupWebView: $url")
-                    onVideoUrlDetected(url, contentType, contentLength)
-                },
-                onHLSSegmentDetected = { segmentUrl ->
-                    //onHLSSegmentDetected(segmentUrl)
-                }
+                onVideoUrlDetected =
+                    { url, contentType, contentLength ->
+                        Log.i("ttdat", "setupWebView: $url")
+                        onVideoUrlDetected(url, contentType, contentLength)
+                    },
+                onHLSSegmentDetected =
+                    { segmentUrl ->
+                        //onHLSSegmentDetected(segmentUrl)
+                    }
             )
         )
 
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                binding?.progressBar?.apply {
-                    progress = newProgress
-                    visibility = if (newProgress < 100) View.VISIBLE else View.GONE
+        webView.webChromeClient =
+            object : WebChromeClient() {
+                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                    binding?.progressBar?.apply {
+                        progress = newProgress
+                        visibility = if (newProgress < 100) View.VISIBLE else View.GONE
+                    }
+                }
+
+                override fun onReceivedTitle(view: WebView?, title: String?) {
+                    currentTitle = title
+                }
+
+                override fun onReceivedIcon(view: WebView?, icon: Bitmap?) {
+                    currentFavicon = icon
                 }
             }
-        }
 
         webView.viewTreeObserver.addOnScrollChangedListener {
             val currentY = webView.scrollY
@@ -222,6 +261,14 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             lastScrollY = currentY
         }
     }
+
+    private fun bitmapToBase64(bitmap: Bitmap?): String? {
+        if (bitmap == null) return null
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        return Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT)
+    }
+
 
     private fun onHLSSegmentDetected(segmentUrl: String) {
         hlsSegments.add(segmentUrl)
@@ -276,10 +323,16 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         }?.start()
     }
 
+    private fun openWebFromHistory(){
+        val url = args.url
+        binding?.webViewContainer?.loadUrl(url)
+    }
+
     override fun initData() {
     }
 
     override fun initListener() {
+        openWebFromHistory()
         binding?.apply {
             fabDownload.setOnClickListener {
                 if (fabDownload.isSelected) {

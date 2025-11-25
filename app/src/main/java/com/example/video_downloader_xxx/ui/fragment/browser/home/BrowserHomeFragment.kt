@@ -39,8 +39,10 @@ import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.E
 import com.example.video_downloader_xxx.ui.activity.MainActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
+import com.example.video_downloader_xxx.ui.fragment.browser.history.WebsiteHistoryViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.EndMarginDecoration
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.SocialAdapter
+import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.WebRecentlyAdapter
 import com.example.video_downloader_xxx.ui.fragment.browser.web.WebFragment
 import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
@@ -62,12 +64,15 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     private var analyzeTimeoutJob: Job? = null
     private val analyzeTimeoutMs = 100_000L
     private var hasShownAddedDialog = false
+    private val history: WebsiteHistoryViewModel by activityViewModel()
 
     private val socialAdapter by lazy {
         SocialAdapter(emptyList()) { social ->
             downloadViaSearch(social.websiteUrl)
         }
     }
+
+    private val webRecentlyAdapter: WebRecentlyAdapter by lazy { WebRecentlyAdapter() }
 
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
         checkDataInClipBoard()
@@ -194,9 +199,10 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             recycleViewListRecentlyWeb.addItemDecoration(EndMarginDecoration(spacing))
             recycleViewListSocialMedia.addItemDecoration(EndMarginDecoration(spacing))
             recycleViewListSocialMedia.adapter = socialAdapter
-            recycleViewListRecentlyWeb.adapter = socialAdapter
+            recycleViewListRecentlyWeb.adapter = webRecentlyAdapter
         }
         observeSocialData()
+        observeWebRecentlyData()
         observeDownloadState()
         setupUrlWatcher()
 
@@ -286,6 +292,10 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 }
             }
         }
+
+        binding?.btnMore?.setOnClickListener {
+            findNavController().navigate(R.id.action_browserFragment_to_historyFragment)
+        }
     }
 
     private fun observeSocialData() {
@@ -293,6 +303,17 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             downloadViewModel.social.collectLatest { socialList ->
                 socialAdapter.updateData(socialList.take(7))
             }
+        }
+    }
+
+    private fun observeWebRecentlyData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            history.recent.collectLatest {
+                webRecentlyAdapter.addData(it)
+            }
+        }
+        webRecentlyAdapter.onItemClick = {
+            downloadViaSearch(it.url)
         }
     }
 
