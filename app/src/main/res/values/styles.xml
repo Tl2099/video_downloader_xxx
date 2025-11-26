@@ -8,7 +8,12 @@
         <item name="cornerSize">12dp</item>
     </style>
 
-    <style name="MyPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
+    <style name="HistoryPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
         <item name="popupMenuBackground">@drawable/popup_white_bg</item>
     </style>
+
+    <style name="BrowserPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
+        <item name="popupMenuBackground">@drawable/browser_popup_bg</item>
+    </style>
+
 </resources>

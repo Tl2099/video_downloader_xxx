@@ -15,12 +15,24 @@
         <action
             android:id="@+id/action_browserFragment_to_historyFragment"
             app:destination="@id/historyFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_bookmarkFragment"
+            app:destination="@id/bookmarkFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/webFragment"
         android:name="com.example.video_downloader_xxx.ui.fragment.browser.web.WebFragment"
         android:label="WebFragment">
+        <action
+            android:id="@+id/action_webFragment_to_historyFragment"
+            app:destination="@id/historyFragment" />
+        <action
+            android:id="@+id/action_webFragment_to_bookmarkFragment"
+            app:destination="@id/bookmarkFragment" />
+        <action
+            android:id="@+id/action_webFragment_to_browserFragment"
+            app:destination="@id/browserFragment" />
         <argument
             android:name="url"
             app:argType="string" />
@@ -31,8 +43,23 @@
         android:name="com.example.video_downloader_xxx.ui.fragment.browser.history.WebHistoryFragment"
         android:label="HistoryFragment">
         <action
-            android:id="@+id/action_HistoryFragment_to_WebFragment"
-            app:destination="@+id/webFragment"/>
+            android:id="@+id/action_historyFragment_to_webFragment"
+            app:destination="@+id/webFragment" />
+        <action
+            android:id="@+id/action_historyFragment_to_browserFragment"
+            app:destination="@+id/browserFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookmarkFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.browser.bookmark.BookmarkFragment"
+        android:label="BookmarkFragment">
+        <action
+            android:id="@+id/action_bookmarkFragment_to_webFragment"
+            app:destination="@+id/webFragment" />
+        <action
+            android:id="@+id/action_bookmarkFragment_to_browserFragment"
+            app:destination="@+id/browserFragment"/>
     </fragment>
 
 </navigation>

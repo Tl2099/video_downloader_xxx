@@ -13,12 +13,15 @@ import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
@@ -48,6 +51,7 @@ import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
 import com.example.video_downloader_xxx.util.TextHelper.isYouTubeUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
+import com.example.video_downloader_xxx.util.resizeIconBitmap
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -129,7 +133,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     override fun initView() {
         Log.d("SonLN", "onCreateDialog: $downloadViewModel")
-
+        webRecentlyAdapter.addData(emptyList())
 //        binding?.apply {
 //            progressBar.isIndeterminate = false
 //            progressBar.max = 100
@@ -294,7 +298,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         }
 
         binding?.btnMore?.setOnClickListener {
-            findNavController().navigate(R.id.action_browserFragment_to_historyFragment)
+            showPopupMenu(it)
+        }
+
+        binding?.btnHowToDownload?.setOnClickListener {
+
         }
     }
 
@@ -344,6 +352,58 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         )
         binding?.icPaste?.isSelected = hasData
     }
+
+    private fun showPopupMenu(anchor: View) {
+        val wrapper = ContextThemeWrapper(requireContext(), R.style.BrowserPopupMenuStyle)
+        val popup = PopupMenu(wrapper, anchor)
+
+        popup.menuInflater.inflate(R.menu.menu_browser, popup.menu)
+
+        try {
+            val field = popup.javaClass.getDeclaredField("mPopup")
+            field.isAccessible = true
+            val menuPopupHelper = field.get(popup)
+            val classPopupHelper = Class.forName(menuPopupHelper.javaClass.name)
+            val setForceIcons = classPopupHelper.getMethod("setForceShowIcon", Boolean::class.java)
+            setForceIcons.invoke(menuPopupHelper, true)
+        } catch (_: Exception) {
+        }
+
+        popup.menu.findItem(R.id.action_new_tab).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_history).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_bookmark).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_share).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_settings).resizeIconBitmap(requireContext(), 30)
+
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_new_tab -> {
+                    downloadViaSearch("https://www.google.com/")
+                }
+
+                R.id.action_history -> {
+                    findNavController().navigate(R.id.action_browserFragment_to_historyFragment)
+                }
+
+                R.id.action_bookmark -> {
+                    findNavController().navigate(R.id.action_browserFragment_to_bookmarkFragment)
+                }
+
+                R.id.action_share -> {
+
+                }
+
+                R.id.action_settings -> {
+
+                }
+            }
+            true
+        }
+
+        popup.show()
+    }
+
 
     private fun showTaskAddedDialog(sourceUrl: String) {
         Log.i(WebFragment.Companion.TAG, "showTaskAddedDialog: called")

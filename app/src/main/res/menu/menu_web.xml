@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_new_tab"
+        android:title="New tab"
+        android:icon="@drawable/ic_new_tab" />
+
+    <item
+        android:id="@+id/action_history"
+        android:title="History Screen"
+        android:icon="@drawable/ic_history" />
+
+    <item
+        android:id="@+id/action_bookmark"
+        android:title="Bookmarks"
+        android:icon="@drawable/ic_bookmarks" />
+
+    <item
+        android:id="@+id/action_add_bookmark"
+        android:title="Add Bookmarks"
+        android:icon="@drawable/ic_add_bookmarks" />
+
+    <item
+        android:id="@+id/action_share"
+        android:title="Share with friends"
+        android:icon="@drawable/ic_share_browser" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:title="Settings"
+        android:icon="@drawable/ic_setting_browser" />
+
+</menu>

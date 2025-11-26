@@ -1,4 +1,4 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.history
+package com.example.video_downloader_xxx.ui.fragment.browser.bookmark
 
 import android.app.AlertDialog
 import android.content.ClipData
@@ -6,34 +6,38 @@ import android.content.ClipboardManager
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.Intent
 import android.graphics.Color
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.R
-import com.example.video_downloader_xxx.databinding.FragmentHistoryBinding
+import com.example.video_downloader_xxx.databinding.FragmentBookmarkBinding
 import com.example.video_downloader_xxx.ui.base.BaseFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
+import kotlin.getValue
 
-class WebHistoryFragment : BaseFragment<FragmentHistoryBinding>() {
-    private val history: WebsiteHistoryViewModel by activityViewModel()
-    private val adapter: WebsiteHistoryAdapter by lazy { WebsiteHistoryAdapter() }
+class BookmarkFragment : BaseFragment<FragmentBookmarkBinding>() {
+
+    private val bookmarkVM: BookmarkViewModel by activityViewModel()
+    private val adapter: BookmarkAdapter by lazy { BookmarkAdapter() }
 
     override fun initView() {
     }
 
     override fun initData() {
-        binding?.recycleViewHistory?.adapter = adapter
+        bookmarkVM.loadBookmarks()
+        binding?.recycleViewBookmark?.adapter = adapter
         viewLifecycleOwner.lifecycleScope.launch {
-            history.history.collectLatest {
+            bookmarkVM.bookmarks.collectLatest {
                 adapter.addData(it)
             }
         }
         adapter.onItemClick = {
-            val action = WebHistoryFragmentDirections.actionHistoryFragmentToWebFragment(it.url)
+            val action = BookmarkFragmentDirections.actionBookmarkFragmentToWebFragment(it.url)
             findNavController().navigate(action)
         }
     }
@@ -45,11 +49,11 @@ class WebHistoryFragment : BaseFragment<FragmentHistoryBinding>() {
 
         binding?.btnBack?.setOnClickListener {
             findNavController().popBackStack()
-            //findNavController().navigate(R.id.action_historyFragment_to_browserFragment)
+            //findNavController().navigate(R.id.action_bookmarkFragment_to_browserFragment)
         }
 
         adapter.onDeleteClick = {
-            history.delete(it.url)
+            bookmarkVM.delete(it)
         }
 
         adapter.onShareClick = {
@@ -72,6 +76,8 @@ class WebHistoryFragment : BaseFragment<FragmentHistoryBinding>() {
 
         val btnNo = dialogView.findViewById<AppCompatButton>(R.id.btnNo)
         val btnYes = dialogView.findViewById<AppCompatButton>(R.id.btnYes)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tvTitle)
+        val tvContent = dialogView.findViewById<TextView>(R.id.tvMessage)
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
@@ -80,10 +86,13 @@ class WebHistoryFragment : BaseFragment<FragmentHistoryBinding>() {
 
         dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
+        tvTitle.text = getString(R.string.txt_title_clear_bookmark)
+        tvContent.text = getString(R.string.txt_content_clear_bookmark)
+
         btnNo.setOnClickListener { dialog.dismiss() }
 
         btnYes.setOnClickListener {
-            history.clearAll()
+            bookmarkVM.clearAll()
             dialog.dismiss()
         }
         dialog.show()
@@ -92,10 +101,10 @@ class WebHistoryFragment : BaseFragment<FragmentHistoryBinding>() {
     override fun reloadAds() {
     }
 
-    override fun getViewBinding(): FragmentHistoryBinding =
-        FragmentHistoryBinding.inflate(layoutInflater)
+    override fun getViewBinding(): FragmentBookmarkBinding =
+        FragmentBookmarkBinding.inflate(layoutInflater)
 
     companion object {
-        const val TAG = "WebHistoryFragment"
+        const val TAG = "BookmarkFragment"
     }
 }

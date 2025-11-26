@@ -74,5 +74,13 @@
     <!--Dialog clear history screen-->
     <string name="txt_title_clear_history">Clear history</string>
     <string name="txt_content_clear_history">Would you like to clear all browser history?</string>
+    <string name="txt_title_clear_bookmark">Clear bookmarks</string>
+    <string name="txt_content_clear_bookmark">Would you like to clear all browser bookmarks?</string>
 
+
+    <!--Bookmark screen-->
+    <string name="txt_content_bookmark">Bookmark added successfully.</string>
+
+    <!--Dialog notification screen-->
+    <string name="txt_title_notification">Notification</string>
 </resources>

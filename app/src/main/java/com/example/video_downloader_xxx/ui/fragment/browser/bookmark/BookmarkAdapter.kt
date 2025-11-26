@@ -1,34 +1,33 @@
-package com.example.video_downloader_xxx.ui.fragment.browser.history
+package com.example.video_downloader_xxx.ui.fragment.browser.bookmark
 
 import android.annotation.SuppressLint
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.RecyclerView
 import com.example.video_downloader_xxx.R
+import com.example.video_downloader_xxx.data.model.Bookmark
 import com.example.video_downloader_xxx.data.model.WebHistory
+import com.example.video_downloader_xxx.databinding.ItemBookmarkBinding
 import com.example.video_downloader_xxx.databinding.ItemWebHistoryBinding
 import com.example.video_downloader_xxx.util.glideLoad
-import androidx.core.graphics.drawable.toDrawable
 
-class WebsiteHistoryAdapter : RecyclerView.Adapter<WebsiteHistoryAdapter.ViewHolder>() {
-    private val listWebHistory: MutableList<WebHistory> = mutableListOf()
+class BookmarkAdapter : RecyclerView.Adapter<BookmarkAdapter.ViewHolder>() {
+
+    private val listBookmark: MutableList<Bookmark> = mutableListOf()
     var onMoreClick: (() -> Unit)? = null
-    var onShareClick: ((WebHistory) -> Unit)? = null
-    var onDeleteClick: ((WebHistory) -> Unit)? = null
-    var onCopyLinkClick: ((WebHistory) -> Unit)? = null
-    var onItemClick: ((WebHistory) -> Unit)? = null
+    var onShareClick: ((Bookmark) -> Unit)? = null
+    var onDeleteClick: ((Bookmark) -> Unit)? = null
+    var onCopyLinkClick: ((Bookmark) -> Unit)? = null
+    var onItemClick: ((Bookmark) -> Unit)? = null
 
-    inner class ViewHolder(val binding: ItemWebHistoryBinding) :
+    inner class ViewHolder(val binding: ItemBookmarkBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: WebHistory) {
+        fun bind(item: Bookmark) {
             with(binding) {
                 tvTitle.text = item.title
-                imgIcon.glideLoad(item.faviconUrl ?: "", R.drawable.web_history)
+                imgIcon.glideLoad(item.faviconBase64 ?: "", R.drawable.web_history)
                 tvWebUrl.text = item.url
 
                 btnMore.setOnClickListener { v ->
@@ -59,19 +58,19 @@ class WebsiteHistoryAdapter : RecyclerView.Adapter<WebsiteHistoryAdapter.ViewHol
         parent: ViewGroup,
         viewType: Int
     ): ViewHolder = ViewHolder(
-        ItemWebHistoryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        ItemBookmarkBinding.inflate(LayoutInflater.from(parent.context), parent, false)
     )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(listWebHistory[position])
+        holder.bind(listBookmark[position])
     }
 
-    override fun getItemCount(): Int = listWebHistory.size
+    override fun getItemCount(): Int = listBookmark.size
 
     @SuppressLint("NotifyDataSetChanged")
-    fun addData(list: List<WebHistory>) {
-        listWebHistory.clear()
-        listWebHistory.addAll(list)
+    fun addData(list: List<Bookmark>) {
+        listBookmark.clear()
+        listBookmark.addAll(list)
         notifyDataSetChanged()
     }
 }

@@ -1,7 +1,9 @@
 package com.example.video_downloader_xxx.data.mapper
 
+import com.example.video_downloader_xxx.data.local.entities.BookmarkEntity
 import com.example.video_downloader_xxx.data.local.entities.DownloadedVideoEntity
 import com.example.video_downloader_xxx.data.local.entities.WebsiteHistoryEntity
+import com.example.video_downloader_xxx.data.model.Bookmark
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.data.model.WebHistory
 import com.example.video_downloader_xxx.util.DownloadStatus
@@ -48,4 +50,22 @@ fun WebHistory.toWebsiteHistoryEntity() = WebsiteHistoryEntity(
     faviconUrl = faviconUrl,
     lastVisited = lastVisited
 )
+
+fun BookmarkEntity.toDomain() = Bookmark(
+    id = id,
+    url = url,
+    title = title,
+    faviconBase64 = faviconBase64,
+    createdAt = createdAt
+)
+
+fun Bookmark.toEntity() = BookmarkEntity(
+    id = id,
+    url = url,
+    title = title,
+    faviconBase64 = faviconBase64,
+    createdAt = createdAt
+)
+
+
 

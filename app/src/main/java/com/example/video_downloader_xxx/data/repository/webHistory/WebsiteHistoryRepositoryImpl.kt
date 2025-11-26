@@ -3,6 +3,7 @@ package com.example.video_downloader_xxx.data.repository.webHistory
 import com.example.video_downloader_xxx.data.local.dao.WebsiteHistoryDao
 import com.example.video_downloader_xxx.data.mapper.toWebHistory
 import com.example.video_downloader_xxx.data.mapper.toWebsiteHistoryEntity
+import com.example.video_downloader_xxx.data.model.Bookmark
 import com.example.video_downloader_xxx.data.model.WebHistory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -29,4 +30,5 @@ class WebsiteHistoryRepositoryImpl(
     override suspend fun deleteAll() {
         dao.clearAll()
     }
+
 }

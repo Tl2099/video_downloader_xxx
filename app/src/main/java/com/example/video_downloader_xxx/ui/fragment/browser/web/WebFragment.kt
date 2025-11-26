@@ -15,6 +15,8 @@ import android.os.Environment
 import android.os.IBinder
 import android.util.Base64
 import android.util.Log
+import android.view.ContextThemeWrapper
+import android.view.LayoutInflater
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -23,6 +25,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -30,7 +33,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.data.DataExt
+import com.example.video_downloader_xxx.data.local.entities.BookmarkEntity
 import com.example.video_downloader_xxx.data.local.entities.WebsiteHistoryEntity
+import com.example.video_downloader_xxx.data.model.Bookmark
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentWebTabBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
@@ -43,6 +48,7 @@ import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.E
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_VIDEO_URL
 import com.example.video_downloader_xxx.ui.activity.MainActivity
 import com.example.video_downloader_xxx.ui.base.BaseFragment
+import com.example.video_downloader_xxx.ui.fragment.browser.bookmark.BookmarkViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.history.WebsiteHistoryViewModel
@@ -50,6 +56,7 @@ import com.example.video_downloader_xxx.ui.fragment.browser.home.BrowserHomeFrag
 import com.example.video_downloader_xxx.util.DownloadStatus
 import com.example.video_downloader_xxx.util.FileHelper
 import com.example.video_downloader_xxx.util.hideKeyboard
+import com.example.video_downloader_xxx.util.resizeIconBitmap
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
@@ -66,6 +73,7 @@ import java.io.File
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val downloadViewModel: SharedViewModel by activityViewModel()
     private val history: WebsiteHistoryViewModel by activityViewModel()
+    private val bookmarkVM: BookmarkViewModel by activityViewModel()
     private lateinit var webView: WebView
     private val hlsSegments = mutableSetOf<String>()
     private var hlsPlaylistUrl: String? = null
@@ -76,9 +84,6 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
     private var lastScrollY = 0
     private var isToolbarShown = true
-
-    private val args: WebFragmentArgs by navArgs()
-
     private var downloadService: VideoDownloadService? = null
     private var serviceBound = false
     private val serviceConnection = object : ServiceConnection {
@@ -122,14 +127,14 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
         binding?.apply {
             ivCloseTab.setOnClickListener {
-                findNavController().popBackStack()
+                findNavController().navigate(R.id.action_webFragment_to_browserFragment)
             }
 
             ivGoBack.setOnClickListener {
                 if (webView.canGoBack()) {
                     webView.goBack()
                 } else {
-                    findNavController().popBackStack()
+                    findNavController().navigate(R.id.action_webFragment_to_browserFragment)
                 }
             }
 
@@ -153,6 +158,10 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                 true
 
             }
+
+            btnBrowserMenu.setOnClickListener {
+                showPopupMenu(it)
+            }
         }
     }
 
@@ -165,6 +174,82 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         }
         webView.loadUrl(url)
         binding?.edtSearch?.clearFocus()
+    }
+
+    private fun showPopupMenu(anchor: View) {
+        val wrapper = ContextThemeWrapper(requireContext(), R.style.BrowserPopupMenuStyle)
+        val popup = PopupMenu(wrapper, anchor)
+
+        popup.menuInflater.inflate(R.menu.menu_web, popup.menu)
+
+        try {
+            val field = popup.javaClass.getDeclaredField("mPopup")
+            field.isAccessible = true
+            val menuPopupHelper = field.get(popup)
+            val classPopupHelper = Class.forName(menuPopupHelper.javaClass.name)
+            val setForceIcons = classPopupHelper.getMethod("setForceShowIcon", Boolean::class.java)
+            setForceIcons.invoke(menuPopupHelper, true)
+        } catch (_: Exception) {
+        }
+
+        popup.menu.findItem(R.id.action_new_tab).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_history).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_bookmark).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_add_bookmark).resizeIconBitmap(requireContext(), 28)
+        popup.menu.findItem(R.id.action_share).resizeIconBitmap(requireContext(), 30)
+        popup.menu.findItem(R.id.action_settings).resizeIconBitmap(requireContext(), 30)
+
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_new_tab -> {
+                    loadInput("https://www.google.com/")
+                }
+
+                R.id.action_history -> {
+                    findNavController().navigate(R.id.action_webFragment_to_historyFragment)
+                }
+
+                R.id.action_bookmark -> {
+                    findNavController().navigate(R.id.action_webFragment_to_bookmarkFragment)
+                }
+
+                R.id.action_add_bookmark -> {
+                    val url = webView.url ?: return@setOnMenuItemClickListener true
+                    val title = webView.title ?: url
+
+                    val faviconBase64 = currentFavicon?.let { bitmapToBase64(it) }
+
+                    bookmarkVM.toggleBookmark(
+                        Bookmark(
+                            url = url,
+                            title = title,
+                            faviconBase64 = faviconBase64,
+                            createdAt = System.currentTimeMillis()
+                        )
+                    )
+                    showInvalidLinkDialog(getString(R.string.txt_content_bookmark), onCancel = {})
+                }
+
+                R.id.action_share -> {
+                    val currentUrl = webView.url ?: return@setOnMenuItemClickListener true
+                    Log.i(TAG, "share url: $currentUrl")
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, currentUrl)
+                    }
+                    startActivity(Intent.createChooser(intent, "Share link"))
+
+                }
+
+                R.id.action_settings -> {
+
+                }
+            }
+            true
+        }
+
+        popup.show()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -323,16 +408,35 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         }?.start()
     }
 
-    private fun openWebFromHistory(){
-        val url = args.url
-        binding?.webViewContainer?.loadUrl(url)
+    private fun showInvalidLinkDialog(
+        message: String,
+        onCancel: (() -> Unit)? = null,
+    ) {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_notify, null)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        dialogView.findViewById<TextView>(R.id.tvMessage).text = message
+        val btnCancel = dialogView.findViewById<AppCompatImageView>(R.id.btnClose)
+
+        btnCancel.setOnClickListener {
+            onCancel?.invoke()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     override fun initData() {
     }
 
     override fun initListener() {
-        openWebFromHistory()
         binding?.apply {
             fabDownload.setOnClickListener {
                 if (fabDownload.isSelected) {

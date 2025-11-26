@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("androidx.navigation.safeargs.kotlin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     id("kotlin-kapt")
 }
 
@@ -14,10 +16,11 @@ android {
 
     defaultConfig {
         applicationId = "com.example.video_downloader_xxx"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -44,11 +47,67 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("Boolean", "isVariantProduce", "true")
+
+            //Adjust
+            buildConfigField("String", "adjust_app_token", "\"roymr4vsz8xs\"")
+            buildConfigField("String", "solar_app_token", "\"ddf87c2da8875d84\"")
+
+            buildConfigField("String", "SDKKey_Max", "\"ZAfVxNkdSk6cf7ZwKlno-4hm9rkqoJZqRtOQdltbEIQZEmpRKvnSPUMfWylvDoPqffwh6xUdDL2la8IlH_UGFD\"")
+            buildConfigField("String", "Inter_Max", "\"ac0d1b8e7ce4cb8c\"")
+            buildConfigField("String", "Inter_Splash_Max", "\"16b9ad5ea8b7a7d6\"")
+            buildConfigField("String", "Native_Max", "\"3b9635a7e13978a7\"")
+            buildConfigField("String", "Native_Full_Max", "\"0171b0c53db719c8\"")
+            buildConfigField("String", "Banner_Max", "\"48e7c132a8b93ec7\"")
+            buildConfigField("String", "AppOpen_Max", "\"eff27eb9c0b7c549\"")
+            buildConfigField("String", "Rewarded_Max", "\"9ba62b1c70e342a4\"")
+
+            resValue("string", "admob_app_id", "ca-app-pub-8936048775410604~6188501102")
+            //Splash
+            buildConfigField("String", "AppOpen_Admob", "\"ca-app-pub-8936048775410604/1295267070\"")
+            buildConfigField("String", "Inter_Splash_Admob", "\"ca-app-pub-8936048775410604/3646098247\"")
+            buildConfigField("String", "Native_Admob", "\"ca-app-pub-8936048775410604/2052717493\"")
+            buildConfigField("String", "Native_Full_Admob", "\"ca-app-pub-8936048775410604/7669103736\"")
+            buildConfigField("String", "Banner_Admob", "\"ca-app-pub-8936048775410604/6356022061\"")
+            buildConfigField("String", "Inter_Admob", "\"ca-app-pub-8936048775410604/4966370031\"")
+            buildConfigField("String", "Rewarded_Admob", "\"ca-app-pub-8936048775410604/2340206691\"")
+        }
+        debug {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            buildConfigField("Boolean", "isVariantProduce", "false")
+
+            //Adjust
+            buildConfigField("String", "adjust_app_token", "\"cc4jvudppczk\"")
+            buildConfigField("String", "solar_app_token", "\"123\"")
+
+            buildConfigField("String", "SDKKey_Max", "\"ZAfVxNkdSk6cf7ZwKlno-4hm9rkqoJZqRtOQdltbEIQZEmpRKvnSPUMfWylvDoPqffwh6xUdDL2la8IlH_UGFD\"")
+            buildConfigField("String", "Inter_Max", "\"2c7fd911d9393057\"")
+            buildConfigField("String", "Inter_Splash_Max", "\"2c7fd911d9393057\"")
+            buildConfigField("String", "Native_Max", "\"645e4f104ae05cc3\"")
+            buildConfigField("String", "Native_Full_Max", "\"645e4f104ae05cc3\"")
+            buildConfigField("String", "Banner_Max", "\"afc329f93331abe0\"")
+            buildConfigField("String", "AppOpen_Max", "\"0aa23fe22877ee4b\"")
+            buildConfigField("String", "Rewarded_Max", "\"126abc7594c6134d\"")
+
+            resValue("string", "admob_app_id", "ca-app-pub-3940256099942544~3347511713")
+            //Splash
+            buildConfigField("String", "AppOpen_Admob", "\"ca-app-pub-3940256099942544/9257395921\"")
+            buildConfigField("String", "Inter_Splash_Admob", "\"ca-app-pub-3940256099942544/1033173712\"")
+            buildConfigField("String", "Native_Admob", "\"ca-app-pub-3940256099942544/2247696110\"")
+            buildConfigField("String", "Native_Full_Admob", "\"ca-app-pub-3940256099942544/2247696110\"")
+            buildConfigField("String", "Banner_Admob", "\"ca-app-pub-3940256099942544/9214589741\"")
+            buildConfigField("String", "Inter_Admob", "\"ca-app-pub-3940256099942544/1033173712\"")
+            buildConfigField("String", "Rewarded_Admob", "\"ca-app-pub-3940256099942544/5224354917\"")
         }
     }
     compileOptions {
@@ -65,6 +124,17 @@ android {
 }
 
 dependencies {
+    //Ads
+    implementation("com.teh.software:ads-sdk:1.4.0.2")
+
+    //Thư viện Google Mobile Ads SDK (AdMob)
+    implementation("com.google.android.gms:play-services-ads:24.6.0")
+
+    //FOA
+    implementation("com.teh.software:foa-sdk:1.4.1.1")
+
+    //multidex
+    implementation("androidx.multidex:multidex:2.0.1")
 
     //lottie
     implementation("com.airbnb.android:lottie:6.6.7")

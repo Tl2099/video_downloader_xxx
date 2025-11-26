@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.video_downloader_xxx.data.local.entities.BookmarkEntity
 import com.example.video_downloader_xxx.data.local.entities.WebsiteHistoryEntity
 import kotlinx.coroutines.flow.Flow
 

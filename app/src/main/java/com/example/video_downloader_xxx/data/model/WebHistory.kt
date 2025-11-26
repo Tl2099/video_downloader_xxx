@@ -1,6 +1,6 @@
 package com.example.video_downloader_xxx.data.model
 
-class WebHistory(
+data class WebHistory(
     val url: String,
     val title: String,
     val faviconUrl: String?,
