@@ -132,7 +132,7 @@ class SharedViewModel(
                         manager.getVideoInfo(url).map { it.copy(isSelected = true) }
                     }
 
-                    _videoDetected.value = repositoryDownload.getVideoInfo(url)
+                    //_videoDetected.value = repositoryDownload.getVideoInfo(url)
                     Log.i("SharedViewModel", "fetchVideoInfo: ${_videoDetected.value} ")
                     if (_videoList.value.isEmpty()) {
                         _downloadVideoState.value =

@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.video_downloader_xxx.R
 import com.example.video_downloader_xxx.databinding.FragmentBookmarkBinding
-import com.example.video_downloader_xxx.ui.base.BaseFragment
+import com.teh.software.tehads.base.BaseFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.activityViewModel

@@ -1,14 +1,12 @@
-package com.example.video_downloader_xxx.ui.fragment.browser
+package com.example.video_downloader_xxx.ui.fragment.browser.home.adapter
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.video_downloader_xxx.R
-import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.ItemVideoBinding
-import com.example.video_downloader_xxx.util.glideLoad
 import com.example.video_downloader_xxx.util.glideLoadUseCache
 
 class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.ViewHolder>() {
@@ -23,7 +21,7 @@ class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.V
         fun bind(item: VideoInfo) {
 
             with(binding) {
-                imgThumbnail.glideLoadUseCache(item.videoUrl?:"", R.drawable.video_placeholder)
+                imgThumbnail.glideLoadUseCache(item.thumbnailUrl?:"", R.drawable.video_placeholder)
                 tvTitle.text = item.title
                 tvFileSize.text = item.fileSize
                 tvTime.text = item.duration

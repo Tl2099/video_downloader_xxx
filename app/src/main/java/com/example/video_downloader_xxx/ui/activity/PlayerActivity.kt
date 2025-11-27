@@ -10,7 +10,6 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.databinding.ActivityPlayerBinding
-import com.example.video_downloader_xxx.ui.base.BaseActivity
 import com.example.video_downloader_xxx.util.isNetworkAvailable
 import java.io.File
 import androidx.core.net.toUri
@@ -18,6 +17,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
+import com.example.video_downloader_xxx.ui.base.BaseActivity
 
 class PlayerActivity : BaseActivity<ActivityPlayerBinding>() {
     private lateinit var player: ExoPlayer

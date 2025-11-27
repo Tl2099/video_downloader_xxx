@@ -11,7 +11,7 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="19dp"
+        android:layout_marginTop="18dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/how_to_download_ic_number_1" />
@@ -21,20 +21,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
-        android:textColor="@color/gray_medium"
         android:text="@string/how_to_download_btn_title_1"
+        android:textColor="@color/gray_medium"
         app:layout_constraintBottom_toBottomOf="@id/imgNumber"
         app:layout_constraintStart_toEndOf="@id/imgNumber"
         app:layout_constraintTop_toTopOf="@id/imgNumber" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imgClose"
-        android:layout_width="24dp"
-        app:layout_constraintTop_toTopOf="@id/imgNumber"
-        app:layout_constraintBottom_toBottomOf="@id/imgNumber"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="6dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_height="24dp"
+        app:layout_constraintBottom_toTopOf="@id/imgMain"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_cancel" />
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -42,14 +44,14 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="18dp"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
         android:src="@drawable/img_how_to_download_1"
         app:layout_constraintDimensionRatio="312:416"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/imgNumber"
+        app:layout_constraintTop_toBottomOf="@id/imgClose"
         app:layout_constraintWidth_max="360dp"
         app:layout_constraintWidth_percent="0.86" />
 
@@ -64,13 +66,14 @@
         app:srcCompat="@drawable/how_to_download_ic_progress_1" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btnNext"
+        android:id="@+id/btnNext1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="44dp"
         android:layout_marginBottom="28dp"
         android:background="@drawable/onboarding_bg_btn_next"
         android:gravity="center"
+        android:visibility="gone"
         android:text="@string/btn_next"
         android:textColor="@color/white"
         android:textSize="14sp"
@@ -79,30 +82,29 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/imgBack"
+        android:id="@+id/btnBack"
         android:layout_width="46dp"
         android:layout_height="46dp"
-        android:visibility="gone"
         android:layout_marginStart="16dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/btnNext"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btnNext1"
-        app:layout_constraintBottom_toBottomOf="@id/btnNext1"
+        app:layout_constraintTop_toTopOf="@id/btnNext"
         app:srcCompat="@drawable/how_to_download_btn_back" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btnNext1"
+        android:id="@+id/btnNext"
         android:layout_width="0dp"
-        android:visibility="gone"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="10dp"
+        android:layout_marginHorizontal="44dp"
         android:layout_marginBottom="28dp"
         android:background="@drawable/onboarding_bg_btn_next"
         android:gravity="center"
         android:text="Next"
         android:textColor="@color/white"
         android:textSize="14sp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/imgBack" />
+        app:layout_constraintStart_toEndOf="@id/btnBack" />
 </androidx.constraintlayout.widget.ConstraintLayout>

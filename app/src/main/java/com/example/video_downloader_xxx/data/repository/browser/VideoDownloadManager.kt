@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -22,6 +23,7 @@ class VideoDownloadManager {
 
     companion object {
         private const val TAG = "VideoDownloadManager"
+
     }
 
     suspend fun getVideoInfo(url: String): List<VideoInfo> = withContext(Dispatchers.IO) {
@@ -69,6 +71,8 @@ class VideoDownloadManager {
                 val fileSizeText = getFileSizeOrFetch(json) ?: "Unknown"
 
                 var thumbnailUrl = json.optString("thumbnail", null)
+
+                Log.i(TAG, "parseVideoInfoList: thumbnailUrl $thumbnailUrl")
 //                if (thumbnailUrl.isNullOrEmpty()) {
 //                    val thumbsArray = json.optJSONArray("thumbnails")
 //                    if (thumbsArray != null && thumbsArray.length() > 0) {

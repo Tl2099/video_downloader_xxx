@@ -16,4 +16,14 @@ object PrefHelper {
         val pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         pref.edit { putBoolean(KEY_ONBOARDING_DONE, true) }
     }
+
+     fun getLastAnalyzedUrl(context: Context): String? {
+        val sharedPreferences = context.getSharedPreferences("videoDownloader", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("lastAnalyzedUrl", null)
+    }
+
+     fun setLastAnalyzedUrl(context: Context, url: String) {
+        val sharedPreferences = context.getSharedPreferences("videoDownloader", Context.MODE_PRIVATE)
+        sharedPreferences.edit { putString("lastAnalyzedUrl", url) }
+    }
 }

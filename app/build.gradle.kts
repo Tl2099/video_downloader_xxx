@@ -136,6 +136,9 @@ dependencies {
     //multidex
     implementation("androidx.multidex:multidex:2.0.1")
 
+    //Json
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+
     //lottie
     implementation("com.airbnb.android:lottie:6.6.7")
 

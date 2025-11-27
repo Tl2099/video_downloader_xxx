@@ -17,7 +17,6 @@ import com.example.video_downloader_xxx.data.DataExt
 import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.FragmentCompleteBinding
 import com.example.video_downloader_xxx.ui.activity.PlayerActivity
-import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
 import com.example.video_downloader_xxx.util.TextHelper.extractExtension
 import com.example.video_downloader_xxx.util.TextHelper.sanitizeFileName
@@ -28,6 +27,7 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import java.io.File
 import androidx.core.graphics.drawable.toDrawable
+import com.teh.software.tehads.base.BaseFragment
 
 class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
     private val library: LibraryViewModel by activityViewModel()

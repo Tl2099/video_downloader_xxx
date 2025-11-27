@@ -11,13 +11,15 @@
         <action
             android:id="@+id/action_browserFragment_to_webFragment"
             app:destination="@id/webFragment" />
-
         <action
             android:id="@+id/action_browserFragment_to_historyFragment"
             app:destination="@id/historyFragment" />
         <action
             android:id="@+id/action_browserFragment_to_bookmarkFragment"
             app:destination="@id/bookmarkFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_howToDownloadFragment"
+            app:destination="@+id/howToDownloadFragment" />
     </fragment>
 
     <fragment
@@ -60,6 +62,15 @@
         <action
             android:id="@+id/action_bookmarkFragment_to_browserFragment"
             app:destination="@+id/browserFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/howToDownloadFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.browser.how_to_download.HowToDownloadFragment"
+        android:label="HowToDownloadFragment">
+        <action
+            android:id="@+id/action_howToDownloadFragment_to_browserFragment"
+            app:destination="@+id/browserFragment" />
     </fragment>
 
 </navigation>

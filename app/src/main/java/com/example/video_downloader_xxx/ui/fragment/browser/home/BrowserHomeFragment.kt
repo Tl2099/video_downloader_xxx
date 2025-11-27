@@ -17,7 +17,6 @@ import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
@@ -40,7 +39,6 @@ import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.E
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_TITLE
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_VIDEO_URL
 import com.example.video_downloader_xxx.ui.activity.MainActivity
-import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.history.WebsiteHistoryViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.EndMarginDecoration
@@ -49,10 +47,14 @@ import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.WebRece
 import com.example.video_downloader_xxx.ui.fragment.browser.web.WebFragment
 import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
+import com.example.video_downloader_xxx.util.PrefHelper
+import com.example.video_downloader_xxx.util.PrefHelper.getLastAnalyzedUrl
+import com.example.video_downloader_xxx.util.PrefHelper.setLastAnalyzedUrl
 import com.example.video_downloader_xxx.util.TextHelper.isYouTubeUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
 import com.example.video_downloader_xxx.util.resizeIconBitmap
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.teh.software.tehads.base.BaseFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -63,12 +65,15 @@ import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     private val downloadViewModel: SharedViewModel by activityViewModel()
-    private var pendingUrl: String? = null
+    private val history: WebsiteHistoryViewModel by activityViewModel()
     private lateinit var clipboardManager: ClipboardManager
+    private var pendingUrl: String? = null
     private var analyzeTimeoutJob: Job? = null
     private val analyzeTimeoutMs = 100_000L
     private var hasShownAddedDialog = false
-    private val history: WebsiteHistoryViewModel by activityViewModel()
+    private var lastProcessedUrl: String? = null
+    private var lastClipboardText: String? = null
+    private var isAnalyzing = false
 
     private val socialAdapter by lazy {
         SocialAdapter(emptyList()) { social ->
@@ -78,8 +83,23 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     private val webRecentlyAdapter: WebRecentlyAdapter by lazy { WebRecentlyAdapter() }
 
+//    private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
+//        val url = getUrlFromClipboard()
+//        if (url != null) {
+//            Log.i(TAG, "url: $url")
+//            autoAnalyzeUrl(url)
+//        }
+//        //checkDataInClipBoard()
+//    }
+
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
-        checkDataInClipBoard()
+        val url = getUrlFromClipboard()
+        Log.i(TAG, "Clipboard changed 1: $url")
+        if (!url.isNullOrEmpty() && url != lastClipboardText) {
+            lastClipboardText = url
+            Log.i(TAG, "Clipboard changed 2: $url")
+            autoAnalyzeUrl(url)
+        }
     }
 
     private var downloadService: VideoDownloadService? = null
@@ -133,6 +153,10 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     override fun initView() {
         Log.d("SonLN", "onCreateDialog: $downloadViewModel")
+        clipboardManager =
+            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.addPrimaryClipChangedListener(clipListener)
+
         webRecentlyAdapter.addData(emptyList())
 //        binding?.apply {
 //            progressBar.isIndeterminate = false
@@ -145,6 +169,10 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             delay(100)
             downloadViewModel.onFindVideoDone
                 .onEach {
+                    //clearClipboard()
+                    lastProcessedUrl = null
+                    lastClipboardText = null
+                    isAnalyzing = false
                     analyzeTimeoutJob?.cancel()
                     binding?.apply {
                         btnSearch.text = getString(R.string.txt_convert)
@@ -169,6 +197,17 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 .launchIn(lifecycleScope)
         }
     }
+
+    private fun clearClipboard() {
+        try {
+            clipboardManager.setPrimaryClip(
+                android.content.ClipData.newPlainText("", "")
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clear clipboard: ${e.message}")
+        }
+    }
+
 
     private fun startDownload(videoInfo: VideoInfo) {
         Log.i(TAG, "startDownload called for: ${videoInfo.title}")
@@ -210,9 +249,6 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         observeDownloadState()
         setupUrlWatcher()
 
-        clipboardManager =
-            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.addPrimaryClipChangedListener(clipListener)
         checkDataInClipBoard()
 
         val clipData = clipboardManager.primaryClip
@@ -302,8 +338,59 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         }
 
         binding?.btnHowToDownload?.setOnClickListener {
-
+            findNavController().navigate(R.id.action_browserFragment_to_howToDownloadFragment)
         }
+    }
+
+    private fun getUrlFromClipboard(): String? {
+        val clip = clipboardManager.primaryClip ?: return null
+        if (clip.itemCount == 0) return null
+
+        val text = clip.getItemAt(0).text?.toString()?.trim()
+        Log.i(TAG, "getUrlFromClipboard: $text")
+        if (text.isNullOrEmpty()) return null
+
+        val hasData = if (clip != null && clip.itemCount > 0) {
+            val item = clip.getItemAt(0)
+            val text = item.text?.toString()
+            val uri = item.uri?.toString()
+            val intent = item.intent?.toUri(Intent.URI_INTENT_SCHEME)
+            !text.isNullOrEmpty() || !uri.isNullOrEmpty() || !intent.isNullOrEmpty()
+        } else {
+            false
+        }
+
+        Log.d(
+            "ClipboardCheck",
+            "hasData=$hasData, clip=${clipboardManager.primaryClip?.getItemAt(0)}"
+        )
+        binding?.icPaste?.isSelected = hasData
+
+        return if (text.isValidUrl() && !text.isYouTubeUrl()) text else null
+    }
+
+    private fun autoAnalyzeUrl(url: String) {
+        Log.i(TAG, "autoAnalyzeUrl: ${getLastAnalyzedUrl(requireContext())}")
+        if (isAnalyzing || url == getLastAnalyzedUrl(requireContext())) return
+
+        setLastAnalyzedUrl(requireContext(), url)
+
+        isAnalyzing = true
+
+        binding?.apply {
+            edtUrl.setText(url)
+            edtUrl.setSelection(url.length)
+
+            btnSearch.text = getString(R.string.txt_analyzing)
+            btnClose.isVisible = true
+            loadingAnim.playAnimation()
+            loadingAnim.isVisible = true
+            txtStatus.isVisible = true
+            txtStatus.text = getString(R.string.txt_status_analyzing)
+        }
+
+        downloadViewModel.clearDetectedVideos()
+        downloadViaUrl(url)
     }
 
     private fun observeSocialData() {
@@ -345,6 +432,8 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         } else {
             false
         }
+
+        Log.i(TAG, "url1: ${clip?.getItemAt(0)?.text}")
 
         Log.d(
             "ClipboardCheck",
@@ -510,13 +599,59 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     override fun onResume() {
         super.onResume()
-        binding?.root?.post {
-            checkDataInClipBoard()
+        Log.i(TAG, "onResume")
+
+        view?.post {
+            scanClipboardForUrl()
         }
-        //checkDataInClipBoard()
+
+//        val clipboardUrl = getUrlFromClipboard()
+//        Log.i(TAG, "onResume clipboardUrl = $clipboardUrl, last = $lastClipboardText")
+//
+//        if (!clipboardUrl.isNullOrEmpty() && clipboardUrl != lastClipboardText) {
+//            lastClipboardText = clipboardUrl
+//            autoAnalyzeUrl(clipboardUrl)
+//        }
+//
+//        checkDataInClipBoard()
     }
 
+    private fun scanClipboardForUrl() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeat(3) { attempt ->
+                delay(300)
+                val url = getUrlFromClipboard()
+                Log.i(TAG, "Scan attempt $attempt → $url")
+
+                if (!url.isNullOrEmpty() && url != getLastAnalyzedUrl(requireContext())) {
+                    setLastAnalyzedUrl(requireContext(),url)
+                    autoAnalyzeUrl(url)
+                    return@launch
+                }
+
+            }
+        }
+    }
+
+
+//    override fun onResume() {
+//        super.onResume()
+//        Log.i(TAG, "onResume: ")
+//        //binding?.root?.post {
+//            checkDataInClipBoard()
+//        //}
+//
+//        val url = getUrlFromClipboard()
+//        Log.i(TAG, "onResume: $url")
+//
+//        if (url != null) {
+//            autoAnalyzeUrl(url)
+//        }
+//        //checkDataInClipBoard()
+//    }
+
     override fun onDestroyView() {
+        Log.i(TAG, "onDestroyView: ")
         super.onDestroyView()
         clipboardManager.removePrimaryClipChangedListener(clipListener)
         binding?.loadingAnim?.cancelAnimation()
@@ -560,6 +695,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         onCancel: (() -> Unit)? = null,
     ) {
         binding?.edtUrl?.text?.clear()
+        binding?.btnClose?.isVisible = false
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_invalid_link, null)
 
@@ -612,6 +748,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
     override fun onPause() {
         super.onPause()
+        Log.i(TAG, "onPause: ")
         binding?.loadingAnim?.cancelAnimation()
     }
 

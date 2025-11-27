@@ -20,8 +20,8 @@ import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.data.repository.library.DownloadRepository
 import com.example.video_downloader_xxx.databinding.FragmentProgressBinding
 import com.example.video_downloader_xxx.service.VideoDownloadService
-import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.library.LibraryViewModel
+import com.teh.software.tehads.base.BaseFragment
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

@@ -47,7 +47,6 @@ import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.E
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_TITLE
 import com.example.video_downloader_xxx.service.VideoDownloadService.Companion.EXTRA_VIDEO_URL
 import com.example.video_downloader_xxx.ui.activity.MainActivity
-import com.example.video_downloader_xxx.ui.base.BaseFragment
 import com.example.video_downloader_xxx.ui.fragment.browser.bookmark.BookmarkViewModel
 import com.example.video_downloader_xxx.ui.fragment.browser.home.DownloadUrlVideoBottomSheet
 import com.example.video_downloader_xxx.ui.fragment.browser.SharedViewModel
@@ -58,6 +57,7 @@ import com.example.video_downloader_xxx.util.FileHelper
 import com.example.video_downloader_xxx.util.hideKeyboard
 import com.example.video_downloader_xxx.util.resizeIconBitmap
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.teh.software.tehads.base.BaseFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
