@@ -45,10 +45,21 @@ class SharedViewModel(
     private val _onFindVideoDone = MutableSharedFlow<Unit>()
     val onFindVideoDone = _onFindVideoDone.asSharedFlow()
 
+    private val _lastAnalyzedUrl = MutableStateFlow<String?>(null)
+    val lastAnalyzedUrl: StateFlow<String?> get() = _lastAnalyzedUrl.asStateFlow()
+
     private var fetchJob: Job? = null
 
     init {
         loadSocials()
+    }
+
+    fun setLastAnalyzedUrl(url: String) {
+        _lastAnalyzedUrl.value = url
+    }
+
+    fun getLastAnalyzedUrl(): String? {
+        return _lastAnalyzedUrl.value
     }
 
     fun addDetectedVideo(videoInfo: VideoInfo) {

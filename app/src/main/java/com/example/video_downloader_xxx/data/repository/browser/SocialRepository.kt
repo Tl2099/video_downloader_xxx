@@ -18,10 +18,12 @@ class SocialRepository {
             ),
             Social(
                 "X (Twitter)",
-                "https://www.google.com/s2/favicons?sz=128&domain=x.com",
+                "https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/012024/twitter-x.png",
                 "https://x.com"
             ),
-            Social("TikTok", "https://tiktok.com/favicon.ico", "https://tiktok.com"),
+            Social("TikTok",
+                "https://cdn-icons-png.flaticon.com/512/3116/3116491.png",
+                "https://tiktok.com"),
             Social(
                 "Reddit",
                 "https://www.google.com/s2/favicons?sz=128&domain=reddit.com",

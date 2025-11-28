@@ -17,6 +17,7 @@ import android.util.Base64
 import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -82,6 +83,9 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private var currentTitle: String? = null
     private var currentFavicon: Bitmap? = null
 
+    private var xDelta = 0f
+    private var yDelta = 0f
+
     private var lastScrollY = 0
     private var isToolbarShown = true
     private var downloadService: VideoDownloadService? = null
@@ -117,6 +121,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun initView() {
         setupWebView()
 
@@ -161,6 +166,25 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
 
             btnBrowserMenu.setOnClickListener {
                 showPopupMenu(it)
+            }
+
+            fabDownload.setOnTouchListener{ v, event ->
+                when( event.action){
+                    MotionEvent.ACTION_DOWN -> {
+                        xDelta = event.rawX - v.x
+                        yDelta = event.rawY - v.y
+                        true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        v.animate()
+                            .x(event.rawX - xDelta)
+                            .y(event.rawY - yDelta)
+                            .setDuration(0)
+                            .start()
+                        true
+                    }
+                    else -> false
+                }
             }
         }
     }
@@ -243,7 +267,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
                 }
 
                 R.id.action_settings -> {
-
+                    findNavController().navigate(R.id.action_webFragment_to_settingFragment)
                 }
             }
             true

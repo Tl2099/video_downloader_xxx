@@ -20,6 +20,9 @@
         <action
             android:id="@+id/action_browserFragment_to_howToDownloadFragment"
             app:destination="@+id/howToDownloadFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_settingFragment"
+            app:destination="@id/settingFragment" />
     </fragment>
 
     <fragment
@@ -35,6 +38,9 @@
         <action
             android:id="@+id/action_webFragment_to_browserFragment"
             app:destination="@id/browserFragment" />
+        <action
+            android:id="@+id/action_webFragment_to_settingFragment"
+            app:destination="@id/settingFragment" />
         <argument
             android:name="url"
             app:argType="string" />
@@ -71,6 +77,19 @@
         <action
             android:id="@+id/action_howToDownloadFragment_to_browserFragment"
             app:destination="@+id/browserFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingFragment"
+        android:name="com.example.video_downloader_xxx.ui.fragment.browser.setting.SettingFragment"
+        android:label="SettingFragment">
+        <action
+            android:id="@+id/action_settingFragment_to_browserFragment"
+            app:destination="@+id/browserFragment" />
+
+        <action
+            android:id="@+id/action_settingFragment_to_howToDownloadFragment"
+            app:destination="@+id/howToDownloadFragment" />
     </fragment>
 
 </navigation>

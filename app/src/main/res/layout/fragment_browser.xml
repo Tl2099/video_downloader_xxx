@@ -76,6 +76,7 @@
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/edtUrl"
                 android:layout_width="0dp"
+                android:paddingVertical="6dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="8dp"
                 android:background="@null"
@@ -159,6 +160,7 @@
             tools:listitem="@layout/item_social_web" />
 
         <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvRecentlyWeb"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"

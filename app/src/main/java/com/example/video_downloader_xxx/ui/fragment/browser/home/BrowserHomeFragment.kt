@@ -47,14 +47,12 @@ import com.example.video_downloader_xxx.ui.fragment.browser.home.adapter.WebRece
 import com.example.video_downloader_xxx.ui.fragment.browser.web.WebFragment
 import com.example.video_downloader_xxx.util.DownloadState
 import com.example.video_downloader_xxx.util.FileHelper.isValidUrl
-import com.example.video_downloader_xxx.util.PrefHelper
-import com.example.video_downloader_xxx.util.PrefHelper.getLastAnalyzedUrl
-import com.example.video_downloader_xxx.util.PrefHelper.setLastAnalyzedUrl
 import com.example.video_downloader_xxx.util.TextHelper.isYouTubeUrl
 import com.example.video_downloader_xxx.util.hideKeyboard
 import com.example.video_downloader_xxx.util.resizeIconBitmap
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.teh.software.tehads.base.BaseFragment
+import com.teh.software.tehads.utils.shareApp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -152,7 +150,6 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initView() {
-        Log.d("SonLN", "onCreateDialog: $downloadViewModel")
         clipboardManager =
             requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.addPrimaryClipChangedListener(clipListener)
@@ -176,6 +173,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     analyzeTimeoutJob?.cancel()
                     binding?.apply {
                         btnSearch.text = getString(R.string.txt_convert)
+                        btnSearch.isEnabled = true
                         edtUrl.text.clear()
                         txtStatus.isVisible = false
                         btnClose.isVisible = false
@@ -289,6 +287,8 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 return@setOnClickListener
             }
 
+            binding?.btnSearch?.isEnabled = false
+
             if (text.isYouTubeUrl()) {
                 showInvalidLinkDialog(
                     "Cannot download YouTube video because\n" +
@@ -325,6 +325,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 binding?.apply {
                     edtUrl.text.clear()
                     btnSearch.text = getString(R.string.txt_convert)
+                    btnSearch.isEnabled = true
                     btnClose.isVisible = false
                     txtStatus.isVisible = false
                     loadingAnim.cancelAnimation()
@@ -339,6 +340,10 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
         binding?.btnHowToDownload?.setOnClickListener {
             findNavController().navigate(R.id.action_browserFragment_to_howToDownloadFragment)
+        }
+
+        binding?.btnSetting?.setOnClickListener {
+            findNavController().navigate(R.id.action_browserFragment_to_settingFragment)
         }
     }
 
@@ -370,10 +375,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     private fun autoAnalyzeUrl(url: String) {
-        Log.i(TAG, "autoAnalyzeUrl: ${getLastAnalyzedUrl(requireContext())}")
-        if (isAnalyzing || url == getLastAnalyzedUrl(requireContext())) return
+        Log.i(TAG, "autoAnalyzeUrl 1: $url // ${downloadViewModel.getLastAnalyzedUrl()}")
+        if (isAnalyzing || url == downloadViewModel.getLastAnalyzedUrl()) return
+        Log.i(TAG, "autoAnalyzeUrl 2: $url")
 
-        setLastAnalyzedUrl(requireContext(), url)
+        downloadViewModel.setLastAnalyzedUrl(url)
 
         isAnalyzing = true
 
@@ -405,6 +411,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             history.recent.collectLatest {
                 webRecentlyAdapter.addData(it)
+                showRecentlyWeb(it.isNotEmpty())
             }
         }
         webRecentlyAdapter.onItemClick = {
@@ -480,11 +487,11 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 }
 
                 R.id.action_share -> {
-
+                    requireActivity().shareApp(getString(R.string.app_name))
                 }
 
                 R.id.action_settings -> {
-
+                    findNavController().navigate(R.id.action_browserFragment_to_settingFragment)
                 }
             }
             true
@@ -564,6 +571,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                         analyzeTimeoutJob?.cancel()
                         binding?.apply {
                             btnSearch.text = getString(R.string.txt_convert)
+                            btnSearch.isEnabled = true
                             btnClose.isVisible = false
                             loadingAnim.cancelAnimation()
                             loadingAnim.isVisible = false
@@ -597,6 +605,13 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
         }
     }
 
+    private fun showRecentlyWeb(isShow: Boolean) {
+        binding?.apply {
+            tvRecentlyWeb.isVisible = isShow
+            recycleViewListRecentlyWeb.isVisible = isShow
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         Log.i(TAG, "onResume")
@@ -623,11 +638,17 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 val url = getUrlFromClipboard()
                 Log.i(TAG, "Scan attempt $attempt → $url")
 
-                if (!url.isNullOrEmpty() && url != getLastAnalyzedUrl(requireContext())) {
-                    setLastAnalyzedUrl(requireContext(),url)
+                if (!url.isNullOrEmpty()) {
+                    //downloadViewModel.setLastAnalyzedUrl(url)
                     autoAnalyzeUrl(url)
                     return@launch
                 }
+
+//                if (!url.isNullOrEmpty() && url != getLastAnalyzedUrl(requireContext())) {
+//                    setLastAnalyzedUrl(requireContext(), url)
+//                    autoAnalyzeUrl(url)
+//                    return@launch
+//                }
 
             }
         }
@@ -681,13 +702,12 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     private fun showAnalyzeTimeout() {
         binding?.apply {
             btnSearch.text = getString(R.string.txt_convert)
+            btnSearch.isEnabled = true
             txtStatus.isVisible = false
             loadingAnim.cancelAnimation()
             loadingAnim.isVisible = false
             txtStatus.text = getString(R.string.txt_analyzing_timeout)
         }
-//        Toast.makeText(requireContext(), "Phân tích quá lâu, vui lòng thử lại", Toast.LENGTH_SHORT)
-//            .show()
     }
 
     private fun showInvalidLinkDialog(

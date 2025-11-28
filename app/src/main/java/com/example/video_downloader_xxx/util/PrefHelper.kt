@@ -6,6 +6,17 @@ import androidx.core.content.edit
 object PrefHelper {
     private const val PREF_NAME = "app_pref"
     private const val KEY_ONBOARDING_DONE = "onboarding_done"
+    private const val KEY_FIRST_OPEN = "first_open"
+
+    fun isFirstOpen(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_FIRST_OPEN, true)
+    }
+
+    fun setFirstOpenFalse(context: Context) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit { putBoolean(KEY_FIRST_OPEN, false) }
+    }
 
     fun isOnboardingDone(context: Context): Boolean {
         val pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
