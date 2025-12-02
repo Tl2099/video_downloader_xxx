@@ -103,4 +103,9 @@
     <string name="txt_context_4_1_setting">Privacy policy</string>
     <string name="txt_context_4_2_setting">Share with friends</string>
 
+    <!--Preference Util-->
+    <string name="every_day">Every day</string>
+    <string name="every_week">Every week</string>
+    <string name="every_month">Every month</string>
+
 </resources>

@@ -29,24 +29,75 @@ class PlayerActivity : BaseActivity<ActivityPlayerBinding>() {
 
         val pathVideoUrl = DataExt.pathVideoUrl
         val pathLocalVideo = DataExt.pathLocalVideo
+        val pathSourceUrl = DataExt.pathSourceUrl
 
-        val isOnline = isNetworkAvailable()
+        Log.i("PlayerActivity", "onCreate: Video Url = $pathVideoUrl")
+        Log.i("PlayerActivity", "onCreate: Local Video = $pathLocalVideo")
+        Log.i("PlayerActivity", "onCreate: Source Url = $pathSourceUrl")
 
-        val uri = if (isOnline) {
-            Log.i("PlayerActivity", "Online")
-            pathVideoUrl.toUri()
-        } else {
-            Log.i("PlayerActivity", "Offline")
-            Uri.fromFile(File(pathLocalVideo))
-        }
+        val uri = chooseVideoUri(pathVideoUrl, pathLocalVideo, pathSourceUrl)
+
         player = ExoPlayer.Builder(this).build()
         binding.playerView.player = player
         binding.playerView.controllerAutoShow = true
         binding.playerView.controllerHideOnTouch = true
         binding.playerView.showController()
+
+        if (uri == Uri.EMPTY) {
+            Toast.makeText(this, "Không tìm thấy video để phát", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         player.setMediaItem(MediaItem.fromUri(uri))
         player.prepare()
         player.play()
+    }
+
+    private fun isTikTokUrl(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        return url.contains("tiktok.com", ignoreCase = true)
+    }
+
+    private fun chooseVideoUri(
+        pathVideoUrl: String?,
+        pathLocalVideo: String?,
+        pathSourceUrl: String?
+    ): Uri {
+        val hasLocal = !pathLocalVideo.isNullOrBlank()
+        val isTikTok = isTikTokUrl(pathSourceUrl ?: pathVideoUrl)
+        val online = isNetworkAvailable()
+
+        Log.i(
+            "PlayerActivity",
+            "chooseVideoUri: isTikTok=$isTikTok, hasLocal=$hasLocal, online=$online"
+        )
+
+        return when {
+            isTikTok && hasLocal -> {
+                Log.i("PlayerActivity", "Play LOCAL (TikTok)")
+                Uri.fromFile(File(pathLocalVideo))
+            }
+
+            !isTikTok && online && !pathVideoUrl.isNullOrBlank() -> {
+                Log.i("PlayerActivity", "Play ONLINE (non-TikTok)")
+                pathVideoUrl.toUri()
+            }
+
+            !isTikTok && hasLocal -> {
+                Log.i("PlayerActivity", "Play LOCAL (non-TikTok, offline)")
+                Uri.fromFile(File(pathLocalVideo))
+            }
+
+            hasLocal -> {
+                Log.i("PlayerActivity", "Play LOCAL (fallback)")
+                Uri.fromFile(File(pathLocalVideo))
+            }
+
+            else -> {
+                Log.e("PlayerActivity", "No valid URI to play")
+                Uri.EMPTY
+            }
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

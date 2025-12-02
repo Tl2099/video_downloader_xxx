@@ -42,6 +42,24 @@ fun ImageView.glideLoadUseCache(url: Any, placeholder: Int) {
         .waitForLayout()
 }
 
+fun ImageView.loadVideoThumbnail(
+    videoUrl: String?,
+    fallbackThumbnail: String?,
+    placeholder: Int
+) {
+    val requestVideoUrl = Glide.with(this)
+        .load(videoUrl)
+        .placeholder(placeholder)
+        .error(
+            Glide.with(this)
+                .load(fallbackThumbnail)
+                .placeholder(placeholder)
+                .error(placeholder)
+        )
+
+    requestVideoUrl.into(this)
+}
+
 fun ImageView.glideLoadCallback(url: Any, callback: () -> Unit) {
     Glide.with(this)
         .asBitmap()

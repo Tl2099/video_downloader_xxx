@@ -70,6 +70,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.qualifier._q
 import java.io.ByteArrayOutputStream
 import java.io.File
+import kotlin.math.abs
 
 class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private val downloadViewModel: SharedViewModel by activityViewModel()
@@ -83,8 +84,11 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
     private var currentTitle: String? = null
     private var currentFavicon: Bitmap? = null
 
-    private var xDelta = 0f
-    private var yDelta = 0f
+    private var downRawX = 0f
+    private var downRawY = 0f
+    private var dX = 0f
+    private var dY = 0f
+    val DRAG_TOLERANCE = 10f
 
     private var lastScrollY = 0
     private var isToolbarShown = true
@@ -171,16 +175,24 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             fabDownload.setOnTouchListener{ v, event ->
                 when( event.action){
                     MotionEvent.ACTION_DOWN -> {
-                        xDelta = event.rawX - v.x
-                        yDelta = event.rawY - v.y
+                        downRawX  = event.rawX
+                        downRawY  = event.rawY
+                        dX = v.x - event.rawX
+                        dY = v.y - event.rawY
                         true
                     }
                     MotionEvent.ACTION_MOVE -> {
-                        v.animate()
-                            .x(event.rawX - xDelta)
-                            .y(event.rawY - yDelta)
-                            .setDuration(0)
-                            .start()
+                        v.x = event.rawX + dX
+                        v.y = event.rawY + dY
+                        true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        val upDX = event.rawX - downRawX
+                        val upDY = event.rawY - downRawY
+
+                        if (abs(upDX) < DRAG_TOLERANCE && abs(upDY) < DRAG_TOLERANCE) {
+                            v.performClick()
+                        }
                         true
                     }
                     else -> false
@@ -408,7 +420,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             sourceUrl = webView.url ?: playlistUrl,
             videoUrl = playlistUrl,
             title = "HLS Video $videoId ($quality)",
-            thumbnailUrl = null,
+            thumbnail = null,
             duration = null,
             fileSize = null,
             downloadStatus = DownloadStatus.PENDING
@@ -502,7 +514,7 @@ class WebFragment : BaseFragment<FragmentWebTabBinding>() {
             putExtra(EXTRA_SOURCE_URL, videoInfo.sourceUrl)
             putExtra(EXTRA_VIDEO_URL, videoInfo.videoUrl)
             putExtra(EXTRA_TITLE, videoInfo.title)
-            putExtra(EXTRA_THUMB, videoInfo.thumbnailUrl)
+            putExtra(EXTRA_THUMB, videoInfo.thumbnail)
             putExtra(EXTRA_DURATION, videoInfo.duration)
             putExtra(EXTRA_FILE_SIZE, videoInfo.fileSize)
         }

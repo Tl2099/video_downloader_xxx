@@ -89,7 +89,7 @@ class DownloadVideosOnWebRepositoryImpl : DownloadVideosOnWebRepository {
                 sourceUrl = sourceUrl,
                 videoUrl = videoUrl,
                 title = title,
-                thumbnailUrl = thumb,
+                thumbnail = thumb,
                 duration = durationText,
                 fileSize = sizeText,
                 downloadStatus = DownloadStatus.PENDING

@@ -45,4 +45,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "video_downloader_xxx"
 include(":app")
- 

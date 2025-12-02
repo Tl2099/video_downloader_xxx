@@ -21,7 +21,7 @@ class DownloadUrlVideoAdapter() : RecyclerView.Adapter<DownloadUrlVideoAdapter.V
         fun bind(item: VideoInfo) {
 
             with(binding) {
-                imgThumbnail.glideLoadUseCache(item.thumbnailUrl?:"", R.drawable.video_placeholder)
+                imgThumbnail.glideLoadUseCache(item.thumbnail?:"", R.drawable.video_placeholder)
                 tvTitle.text = item.title
                 tvFileSize.text = item.fileSize
                 tvTime.text = item.duration

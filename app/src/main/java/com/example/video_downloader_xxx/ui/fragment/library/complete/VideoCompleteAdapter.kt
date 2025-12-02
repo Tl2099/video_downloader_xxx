@@ -10,6 +10,7 @@ import com.example.video_downloader_xxx.data.model.VideoInfo
 import com.example.video_downloader_xxx.databinding.ItemVideoCompleteBinding
 import com.example.video_downloader_xxx.util.formatTimestamp
 import com.example.video_downloader_xxx.util.glideLoadUseCache
+import com.example.video_downloader_xxx.util.loadVideoThumbnail
 
 class VideoCompleteAdapter() : RecyclerView.Adapter<VideoCompleteAdapter.ViewHolder>() {
 
@@ -22,7 +23,11 @@ class VideoCompleteAdapter() : RecyclerView.Adapter<VideoCompleteAdapter.ViewHol
         fun bind(item: VideoInfo) {
             with(binding) {
                 val formatted = item.downloadedAt?.let { formatTimestamp(it) } ?: "N/A"
-                imgThumbnail.glideLoadUseCache(item.videoUrl ?: "", R.drawable.video_placeholder)
+                imgThumbnail.loadVideoThumbnail(
+                    videoUrl = item.videoUrl,
+                    fallbackThumbnail = item.thumbnail,
+                    placeholder = R.drawable.video_placeholder
+                )
                 tvTitle.text = item.title
                 tvTime.text = item.duration
                 tvFileSize.text = item.fileSize

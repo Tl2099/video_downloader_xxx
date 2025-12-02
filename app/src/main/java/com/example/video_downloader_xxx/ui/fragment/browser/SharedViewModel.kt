@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.io.File
+import kotlin.math.log
 
 class SharedViewModel(
     private val manager: VideoDownloadManager,
@@ -141,6 +142,10 @@ class SharedViewModel(
                 withTimeout(100000L) {
                     _videoList.update {
                         manager.getVideoInfo(url).map { it.copy(isSelected = true) }
+                    }
+
+                    for (video in _videoList.value) {
+                        Log.i("SharedViewModel", "fetchVideoInfo 1: ${video.videoUrl} ")
                     }
 
                     //_videoDetected.value = repositoryDownload.getVideoInfo(url)

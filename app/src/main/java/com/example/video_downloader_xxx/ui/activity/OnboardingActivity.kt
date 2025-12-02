@@ -32,7 +32,6 @@ class OnboardingActivity: BaseActivity<ActivityOnboardingBinding>() {
     private fun loadImage(index: Int) {
         binding.imgMain.setImageResource(onboardingImages[index])
 
-        // Đổi text nút ở trang cuối
         binding.btnNext.text = if (index == onboardingImages.lastIndex) "Start" else "Next"
     }
 

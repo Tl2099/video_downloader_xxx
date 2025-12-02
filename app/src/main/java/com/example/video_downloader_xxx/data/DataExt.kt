@@ -7,5 +7,6 @@ object DataExt {
     var pathVideoUrl = "video/"
     var pathWebUrl = "web/"
     var pathLocalVideo = "video/"
+    var pathSourceUrl: String? = null
     var listVideoInfo: MutableList<VideoInfo> = mutableListOf()
 }

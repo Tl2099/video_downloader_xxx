@@ -17,7 +17,7 @@ fun VideoInfo.toEntity(): DownloadedVideoEntity {
         filePath = this.localPath ?: "",
         fileSize = this.fileSize,
         duration = this.duration,
-        thumbnailUrl = this.thumbnailUrl,
+        thumbnailUrl = this.thumbnail,
         downloadedAt = downloadedAt ?: System.currentTimeMillis()
     )
 }
@@ -28,7 +28,7 @@ fun DownloadedVideoEntity.toVideoInfo(): VideoInfo {
         title = this.title,
         videoUrl = this.videoUrl,
         sourceUrl = this.sourceUrl ?: "",
-        thumbnailUrl = this.thumbnailUrl,
+        thumbnail = this.thumbnailUrl,
         fileSize = this.fileSize,
         duration = this.duration,
         localPath = this.filePath,

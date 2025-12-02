@@ -43,7 +43,7 @@ object FileHelper {
 
 
     fun createVideoFile(context: Context, url: String): File {
-        val ext = MimeTypeMap.getFileExtensionFromUrl(url)
+        val ext = MimeTypeMap.getFileExtensionFromUrl(url).ifEmpty { "mp4" }
         val dir = getAppVideoDir(context)
         val fileName = "video_${System.currentTimeMillis()}.${ext}"
         return File(dir, fileName)

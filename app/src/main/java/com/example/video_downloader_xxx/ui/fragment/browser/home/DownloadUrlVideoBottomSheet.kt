@@ -107,7 +107,9 @@ class DownloadUrlVideoBottomSheet() : BottomSheetDialogFragment() {
             showRenameDialog(it)
         }
         adapter.onClick = { video ->
+            Log.i(TAG, "adapter.onClick video: $video")
             video.videoUrl?.let { path ->
+                Log.i(TAG, "adapter.onClick path: $path")
                 DataExt.pathVideoUrl = path
                 startActivity(Intent(requireContext(), PlayerActivity::class.java))
             }

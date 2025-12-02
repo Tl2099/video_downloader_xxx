@@ -58,17 +58,21 @@ class CompleteFragment : BaseFragment<FragmentCompleteBinding>() {
 
     override fun initListener() {
         adapter.onItemClick = { video ->
-            Log.i(TAG, "initListener: ${video.localPath} ${DataExt.pathVideoUrl}")
-            video.videoUrl?.let { path ->
-                DataExt.pathVideoUrl = path
-                Log.i(TAG, "initListener: $path ${DataExt.pathVideoUrl}")
+            Log.i(TAG, "initListener: localPath=${video.localPath} videoUrl=${video.videoUrl}")
+
+            val onlinePath = video.videoUrl ?: video.sourceUrl
+
+            DataExt.pathVideoUrl = onlinePath
+            DataExt.pathLocalVideo = video.localPath ?: ""
+
+            video.sourceUrl.let { src ->
+                DataExt.pathSourceUrl = src
+                Log.i(TAG, "initListener: sourceUrl=$src")
             }
-            video.localPath?.let { path ->
-                DataExt.pathLocalVideo = path
-                Log.i(TAG, "initListener: $path ${DataExt.pathLocalVideo}")
-            }
+
             startActivity(Intent(requireContext(), PlayerActivity::class.java))
         }
+
 
         adapter.onMoreClick = { video ->
             val sheet = CompleteBottomSheet.newInstance(

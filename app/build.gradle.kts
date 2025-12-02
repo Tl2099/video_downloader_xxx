@@ -9,6 +9,8 @@ plugins {
 
 val splitApks = !project.hasProperty("noSplits")
 val abiFilterList = (properties["ABI_FILTERS"] as String).split(';')
+//val baseVersionName = currentVersion.name
+//val currentVersionCode = currentVersion.code.toInt()
 
 android {
     namespace = "com.example.video_downloader_xxx"
@@ -18,7 +20,6 @@ android {
         applicationId = "com.example.video_downloader_xxx"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
         versionName = "1.0"
         multiDexEnabled = true
 
@@ -110,6 +111,29 @@ android {
             buildConfigField("String", "Rewarded_Admob", "\"ca-app-pub-3940256099942544/5224354917\"")
         }
     }
+
+    flavorDimensions += "publishChannel"
+
+//    productFlavors {
+//        create("generic") {
+//            dimension = "publishChannel"
+//            isDefault = true
+//        }
+//
+//        create("githubPreview") {
+//            dimension = "publishChannel"
+//            applicationIdSuffix = ".preview"
+//            resValue("string", "app_name", "Seal Preview")
+//        }
+//
+////        create("fdroid") {
+////            dimension = "publishChannel"
+////            versionName = "$baseVersionName-(F-Droid)"
+////        }
+//    }
+
+    lint { disable.addAll(listOf("MissingTranslation", "ExtraTranslation", "MissingQuantity")) }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -132,6 +156,9 @@ dependencies {
 
     //FOA
     implementation("com.teh.software:foa-sdk:1.4.1.1")
+
+    //MMKV
+    implementation("com.tencent:mmkv:1.3.2")
 
     //multidex
     implementation("androidx.multidex:multidex:2.0.1")

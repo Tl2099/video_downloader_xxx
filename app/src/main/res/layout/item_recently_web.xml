@@ -10,7 +10,6 @@
         android:id="@+id/imgIcon"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:srcCompat="@drawable/ic_plus"
         android:background="@color/white"
         android:scaleType="centerCrop" />
 

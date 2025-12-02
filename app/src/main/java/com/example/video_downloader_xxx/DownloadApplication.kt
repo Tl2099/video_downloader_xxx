@@ -1,5 +1,7 @@
 package com.example.video_downloader_xxx
 
+import android.annotation.SuppressLint
+import android.content.Context
 import com.example.video_downloader_xxx.di.appModules
 import com.example.video_downloader_xxx.di.databaseModule
 import com.example.video_downloader_xxx.di.repositoryModule
@@ -48,8 +50,12 @@ class DownloadApplication : NovaApplication() {
     }
 
     companion object {
+        @SuppressLint("StaticFieldLeak")
         lateinit var instance: DownloadApplication
             private set
+
+        @SuppressLint("StaticFieldLeak")
+        lateinit var context: Context
     }
 
     private fun initAds() {

@@ -8,6 +8,7 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -25,6 +26,7 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
         binding = viewBinding()
         setContentView(binding.root)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val callback = onBackPressedDispatcher.addCallback(this) {}
         initView()
         initData()
         initListener()

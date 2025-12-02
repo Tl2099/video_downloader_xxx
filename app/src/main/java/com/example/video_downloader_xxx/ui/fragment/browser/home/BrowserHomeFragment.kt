@@ -162,8 +162,6 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     override fun initData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            delay(100)
             downloadViewModel.onFindVideoDone
                 .onEach {
                     //clearClipboard()
@@ -180,6 +178,14 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                         loadingAnim.isVisible = false
                         loadingAnim.cancelAnimation()
                     }
+
+                    val existed =
+                        parentFragmentManager.findFragmentByTag("DownloadSheet") as? DownloadUrlVideoBottomSheet
+                    if (existed?.dialog?.isShowing == true) {
+                        return@onEach
+                    }
+
+
                     val sheet = DownloadUrlVideoBottomSheet.newInstance(
                         onDownload = {
                             Log.i(TAG, "onDownload: ${it.videoUrl}")
@@ -192,8 +198,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     )
                     sheet.show(parentFragmentManager, "DownloadSheet")
                 }
-                .launchIn(lifecycleScope)
-        }
+                .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun clearClipboard() {
@@ -221,7 +226,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
             putExtra(EXTRA_SOURCE_URL, videoInfo.sourceUrl)
             putExtra(EXTRA_VIDEO_URL, videoInfo.videoUrl)
             putExtra(EXTRA_TITLE, videoInfo.title)
-            putExtra(EXTRA_THUMB, videoInfo.thumbnailUrl)
+            putExtra(EXTRA_THUMB, videoInfo.thumbnail)
             putExtra(EXTRA_DURATION, videoInfo.duration)
             putExtra(EXTRA_FILE_SIZE, videoInfo.fileSize)
         }
@@ -287,8 +292,6 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                 return@setOnClickListener
             }
 
-            binding?.btnSearch?.isEnabled = false
-
             if (text.isYouTubeUrl()) {
                 showInvalidLinkDialog(
                     "Cannot download YouTube video because\n" +
@@ -308,6 +311,9 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
 
             if (text.isValidUrl()) {
                 Log.i(TAG, "btn url: $text")
+                binding?.btnSearch?.isEnabled = false
+                binding?.txtStatus?.text = getString(R.string.txt_status_analyzing)
+                binding?.btnSearch?.isEnabled = false
                 downloadViaUrl(text)
             } else {
                 Log.i(TAG, "btn search: $text")
@@ -331,6 +337,10 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     loadingAnim.cancelAnimation()
                     loadingAnim.isVisible = false
                 }
+
+                isAnalyzing = false
+                lastClipboardText = null
+                clearClipboard()
             }
         }
 
@@ -567,7 +577,12 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
                     }
 
                     is DownloadState.Error -> {
+                        if (!isAnalyzing) {
+                            Log.i(TAG, "Error received but user canceled, ignore")
+                            return@collect
+                        }
                         Log.i("BrowserHomeFragment_ttdat", "DownloadState Error ")
+                        isAnalyzing = false
                         analyzeTimeoutJob?.cancel()
                         binding?.apply {
                             btnSearch.text = getString(R.string.txt_convert)
@@ -632,6 +647,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     }
 
     private fun scanClipboardForUrl() {
+        Log.i(TAG, "scanClipboardForUrl: Called")
         viewLifecycleOwner.lifecycleScope.launch {
             repeat(3) { attempt ->
                 delay(300)
@@ -716,6 +732,7 @@ class BrowserHomeFragment : BaseFragment<FragmentBrowserBinding>() {
     ) {
         binding?.edtUrl?.text?.clear()
         binding?.btnClose?.isVisible = false
+        binding?.btnSearch?.isEnabled = true
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_invalid_link, null)
 

@@ -32,6 +32,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.LinkedList
 import java.util.Queue
+import kotlin.math.log
 
 class VideoDownloadService : Service() {
     private val repo: VideoInfoRepository by inject()
@@ -101,7 +102,7 @@ class VideoDownloadService : Service() {
             sourceUrl = sourceUrl,
             videoUrl = videoUrl,
             title = title,
-            thumbnailUrl = thumb,
+            thumbnail = thumb,
             duration = duration,
             fileSize = fileSize,
             downloadStatus = DownloadStatus.PENDING
@@ -111,6 +112,14 @@ class VideoDownloadService : Service() {
 
         return START_STICKY
     }
+
+    private fun isTikTok(video: VideoInfo): Boolean {
+        val s = video.sourceUrl.orEmpty()
+        val v = video.videoUrl.orEmpty()
+        return s.contains("tiktok.com", ignoreCase = true) ||
+                v.contains("tiktok.com", ignoreCase = true)
+    }
+
 
 //    fun startDownload(video: VideoInfo) {
 //        val jobKey = video.id
@@ -239,30 +248,80 @@ class VideoDownloadService : Service() {
     private fun startJob(video: VideoInfo) {
         DownloadRepository.addDownloading(video)
         val outputFolder = FileHelper.createVideoFile(this, video.videoUrl ?: "")
+        val outputDir = FileHelper.getAppVideoDir(this)
+
+        val downloadingVideo = video.copy(
+            downloadStatus = DownloadStatus.DOWNLOADING,
+            progress = 0f
+        )
+
+        DownloadRepository.addDownloading(downloadingVideo)
 
         val job = serviceScope.launch {
             try {
-                downloader.downloadVideo(
-                    url = video.videoUrl ?: video.sourceUrl,
-                    destFile = outputFolder,
-                    onProgress = { percent ->
-                        DownloadRepository.updateProgress(video.id, percent.toFloat())
+                if (isTikTok(video)) {
+                    Log.i(TAG, "startJob Tiktok Video: ")
+                    downloadManager.downloadVideo(
+                        downloadingVideo,
+                        outputDir
+                    ).collect { progress ->
+                        Log.d(
+                            TAG,
+                            "Download progress [${downloadingVideo.title}]: ${progress.percent}% - ${progress.logLine}"
+                        )
+                        when {
+                            progress.percent < 0f -> {
+                                //DownloadRepository.markFailed(downloadingVideo.id)
+                            }
+
+                            progress.percent in 0f..99.9f -> {
+                                DownloadRepository.updateProgress(downloadingVideo.id, progress.percent)
+                            }
+
+                            progress.percent >= 100f -> {
+                                DownloadRepository.updateProgress(downloadingVideo.id, 100f)
+
+                                val localPath = findDownloadedFilePath(outputDir, downloadingVideo.title)
+                                Log.i(TAG, "TikTok completed [${downloadingVideo.title}] path=$localPath")
+
+                                val completedVideo = downloadingVideo.copy(
+                                    localPath = localPath,
+                                    downloadedAt = System.currentTimeMillis()
+                                )
+
+                                repo.insert(completedVideo.toEntity())
+                                DownloadRepository.markCompleted(downloadingVideo.id, localPath)
+                            }
+                        }
                     }
-                )
 
-                val completedVideo = video.copy(localPath = outputFolder.absolutePath, downloadedAt = System.currentTimeMillis())
-                Log.i(TAG, "duration: ${completedVideo.duration}")
-                repo.insert(completedVideo.toEntity())
+                } else {
+                    Log.i(TAG, "startJob Normal Video: ")
+                    downloader.downloadVideo(
+                        url = video.videoUrl ?: video.sourceUrl,
+                        destFile = outputFolder,
+                        onProgress = { percent ->
+                            DownloadRepository.updateProgress(downloadingVideo.id, percent.toFloat())
+                        }
+                    )
 
-                DownloadRepository.removeDownloading(video.id)
+                    val completedVideo = downloadingVideo.copy(
+                        localPath = outputFolder.absolutePath,
+                        downloadedAt = System.currentTimeMillis()
+                    )
+                    Log.i(TAG, "duration: ${completedVideo.duration}")
+                    repo.insert(completedVideo.toEntity())
 
-                DownloadRepository.markCompleted(video.id, outputFolder.absolutePath)
+                    DownloadRepository.removeDownloading(downloadingVideo.id)
 
+                    DownloadRepository.markCompleted(downloadingVideo.id, outputFolder.absolutePath)
+
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Download error: ${e.message}", e)
-                DownloadRepository.markFailed(video.id)
+                DownloadRepository.markFailed(downloadingVideo.id)
             } finally {
-                jobs.remove(video.id)
+                jobs.remove(downloadingVideo.id)
                 nextJob()
                 if (jobs.isEmpty() && pendingDownloads.isEmpty()) stopSelf()
             }
